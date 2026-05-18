@@ -1213,30 +1213,51 @@ document.getElementById('auth-submit-btn').addEventListener('click', handleAuth)
   document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
 });
 
-function handleAuth() {
-  const username = document.getElementById('auth-username').value.trim().toLowerCase();
-  const password = document.getElementById('auth-password').value;
-  const err = document.getElementById('auth-error');
-  err.textContent = '';
+async function handleAuth() {
+  const username    = document.getElementById('auth-username').value.trim().toLowerCase();
+  const password    = document.getElementById('auth-password').value;
+  const err         = document.getElementById('auth-error');
+  const submitBtn   = document.getElementById('auth-submit-btn');
+  err.textContent   = '';
 
   if (!username || !password) { err.textContent = 'All fields must be filled, creature.'; return; }
 
-  const users = LS.get('users') || {};
+  // Disable button while talking to Firestore
+  submitBtn.disabled    = true;
+  submitBtn.textContent = 'Consulting the dark records…';
 
-  if (authMode === 'register') {
-    const displayName = document.getElementById('reg-name').value.trim() || username;
-    const confirm = document.getElementById('reg-confirm').value;
-    if (password !== confirm) { err.textContent = 'Your blood oaths do not match.'; return; }
-    if (users[username]) { err.textContent = 'This bloodline already exists in our records.'; return; }
-    if (password.length < 4) { err.textContent = 'Your oath must be at least 4 characters.'; return; }
-    users[username] = { username, displayName, passwordHash: btoa(password) };
-    LS.set('users', users);
-    loginUser({ username, displayName }, true);
-  } else {
-    if (!users[username] || users[username].passwordHash !== btoa(password)) {
-      err.textContent = 'Unknown bloodline or incorrect oath.'; return;
+  try {
+    if (authMode === 'register') {
+      const displayName = document.getElementById('reg-name').value.trim() || username;
+      const confirm     = document.getElementById('reg-confirm').value;
+      if (password !== confirm)  { err.textContent = 'Your blood oaths do not match.'; return; }
+      if (password.length < 4)   { err.textContent = 'Your oath must be at least 4 characters.'; return; }
+
+      // Check if username already taken in Firestore
+      const existing = await db.collection('users').doc(username).get();
+      if (existing.exists) { err.textContent = 'This bloodline already exists in our records.'; return; }
+
+      // Save new user to Firestore
+      const userData = { username, displayName, passwordHash: btoa(password), createdAt: Date.now() };
+      await db.collection('users').doc(username).set(userData);
+      loginUser({ username, displayName }, true);
+
+    } else {
+      // Login — fetch user doc from Firestore
+      const doc = await db.collection('users').doc(username).get();
+      if (!doc.exists) { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
+      const userData = doc.data();
+      if (userData.passwordHash !== btoa(password)) { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
+
+      // Remember session in localStorage so they stay logged in on this device
+      loginUser({ username: userData.username, displayName: userData.displayName }, true);
     }
-    loginUser(users[username], true);
+  } catch (e) {
+    err.textContent = 'The shadows are unresponsive. Check your connection.';
+    console.error('Auth error:', e);
+  } finally {
+    submitBtn.disabled    = false;
+    submitBtn.textContent = authMode === 'register' ? 'Become One of Us' : 'Enter';
   }
 }
 
