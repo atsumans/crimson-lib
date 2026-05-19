@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com;
+  connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com;
+  img-src 'self' data: blob:;
+">
 <title>Sanguis Libri — The Crimson Library</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -960,12 +968,14 @@ const firebaseConfig = {
   storageBucket: "sanguis-libri.firebasestorage.app",
   messagingSenderId: "58284425671",
   appId: "1:58284425671:web:e168ad499a78f63f2b99e2"
+  databaseURL: "https://sanguis-libri-default-rtdb.firebaseio.com/"
 };
 // ▲▲▲ PASTE YOUR FIREBASE CONFIG HERE ▲▲▲
 
 firebase.initializeApp(firebaseConfig);
-const db   = firebase.firestore();   // annotations + library
-const rtdb = firebase.database();    // presence + chapter position (needs speed)
+const db = firebase.firestore();
+db.settings({ experimentalForceLongPolling: true, merge: true });
+const rtdb = firebase.database();
 
 let currentUser    = null;
 let annUnsubscribe = null;   // Firestore real-time listener teardown fn
