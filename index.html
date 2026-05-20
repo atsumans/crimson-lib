@@ -969,7 +969,7 @@ try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
   // Force long-polling — fixes "client is offline" on GitHub Pages
-  db.settings({ experimentalForceLongPolling: true, merge: true });
+  db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
   rtdb = firebase.database();
   console.log('✅ Firebase initialized');
 } catch(e) {
