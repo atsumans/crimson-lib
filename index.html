@@ -939,6 +939,8 @@ spawnParticles();
 
 // ═══════════════════════════════════════════════════════
 // STORAGE HELPERS
+// LS is used ONLY for temporary annotation/library cache
+// Users and sessions are stored in Firebase ONLY
 // ═══════════════════════════════════════════════════════
 const SITE_PASS = 'dracula';
 const LS = {
@@ -1174,14 +1176,28 @@ function showScreen(id) {
 }
 
 // ═══════════════════════════════════════════════════════
-// INIT
+// INIT — session stored in sessionStorage (tab only)
+// User data fetched fresh from Realtime Database on load
 // ═══════════════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   const sitePassed = sessionStorage.getItem('site_pass_ok');
-  const savedUser = LS.get('current_session');
   if (!sitePassed) { showScreen('sitepass'); return; }
-  if (!savedUser)  { showScreen('auth'); return; }
-  loginUser(savedUser, false);
+
+  // Check if a session token is saved in sessionStorage
+  const sessionToken = sessionStorage.getItem('session_token');
+  const sessionUser  = sessionStorage.getItem('session_user');
+  if (!sessionToken || !sessionUser) { showScreen('auth'); return; }
+
+  try {
+    // Verify session still exists in Firebase
+    const snap = await rtdb.ref('sessions/' + sessionToken).get();
+    if (!snap.exists()) { sessionStorage.clear(); showScreen('auth'); return; }
+    const userData = JSON.parse(sessionUser);
+    loginUser(userData, false);
+  } catch(e) {
+    console.error('Session restore failed:', e);
+    showScreen('auth');
+  }
 });
 
 // ═══════════════════════════════════════════════════════
@@ -1194,9 +1210,19 @@ function checkSitePass() {
   const val = document.getElementById('site-pass-input').value.trim().toLowerCase();
   if (val === SITE_PASS) {
     sessionStorage.setItem('site_pass_ok', '1');
-    const savedUser = LS.get('current_session');
-    if (savedUser) loginUser(savedUser, false);
-    else showScreen('auth');
+    // Check if session exists
+    const sessionToken = sessionStorage.getItem('session_token');
+    const sessionUser  = sessionStorage.getItem('session_user');
+    if (sessionToken && sessionUser) {
+      rtdb.ref('sessions/' + sessionToken).get()
+        .then(snap => {
+          if (snap.exists()) loginUser(JSON.parse(sessionUser), false);
+          else showScreen('auth');
+        })
+        .catch(() => showScreen('auth'));
+    } else {
+      showScreen('auth');
+    }
   } else {
     const err = document.getElementById('site-pass-error');
     err.textContent = 'The covenant word does not match. You are not welcome here.';
@@ -1236,109 +1262,107 @@ async function handleAuth() {
   if (!username || !password) { err.textContent = 'All fields must be filled, creature.'; return; }
   if (!/^[a-z0-9_]+$/.test(username)) { err.textContent = 'Username: letters, numbers, underscores only.'; return; }
 
-  const localUsers = LS.get('users') || {};
+  submitBtn.disabled    = true;
+  submitBtn.textContent = 'Consulting the dark records…';
 
-  if (authMode === 'register') {
-    const displayName = document.getElementById('reg-name').value.trim() || username;
-    const confirm     = document.getElementById('reg-confirm').value;
-    if (password !== confirm) { err.textContent = 'Your blood oaths do not match.'; return; }
-    if (password.length < 4)  { err.textContent = 'Your oath must be at least 4 characters.'; return; }
-    if (localUsers[username]) { err.textContent = 'This bloodline already exists in our records.'; return; }
+  try {
+    if (authMode === 'register') {
+      const displayName = document.getElementById('reg-name').value.trim() || username;
+      const confirm     = document.getElementById('reg-confirm').value;
+      if (password !== confirm) { err.textContent = 'Your blood oaths do not match.'; return; }
+      if (password.length < 4)  { err.textContent = 'Your oath must be at least 4 characters.'; return; }
 
-    const userData = { username, displayName, passwordHash: btoa(password), createdAt: Date.now() };
+      // Check if username already exists in Realtime Database
+      const existing = await rtdb.ref('users/' + username).get();
+      if (existing.exists()) { err.textContent = 'This bloodline already exists in our records.'; return; }
 
-    // Save to localStorage IMMEDIATELY — no waiting
-    localUsers[username] = userData;
-    LS.set('users', localUsers);
+      // Save user to Realtime Database
+      const userData = { username, displayName, passwordHash: btoa(password), createdAt: Date.now() };
+      await rtdb.ref('users/' + username).set(userData);
 
-    // Sync to Firestore silently in the background — don't wait for it
-    if (db) {
-      db.collection('users').doc(username).set(userData)
-        .then(() => console.log('✅ User synced to Firestore'))
-        .catch(e => console.warn('⚠️ Firestore sync failed (user still saved locally):', e.message));
-    }
+      loginUser({ username, displayName }, true);
 
-    loginUser({ username, displayName }, true);
+    } else {
+      // Fetch user from Realtime Database
+      const snap = await rtdb.ref('users/' + username).get();
+      if (!snap.exists()) { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
 
-  } else {
-    // LOGIN — check localStorage first (instant), then try Firestore if not found
-    let userData = localUsers[username] || null;
-
-    if (userData) {
-      // Found locally — verify password immediately
+      const userData = snap.val();
       if (userData.passwordHash !== btoa(password)) {
         err.textContent = 'Unknown bloodline or incorrect oath.'; return;
       }
+
       loginUser({ username: userData.username, displayName: userData.displayName }, true);
-
-    } else {
-      // Not in localStorage — must fetch from Firestore (first login on new device)
-      submitBtn.disabled    = true;
-      submitBtn.textContent = 'Searching the ancient records…';
-      try {
-        // Add a 10 second timeout so it never hangs forever
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 10000)
-        );
-        const fetchPromise = db.collection('users').doc(username).get();
-        const doc = await Promise.race([fetchPromise, timeoutPromise]);
-
-        if (!doc.exists) { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
-        userData = doc.data();
-        if (userData.passwordHash !== btoa(password)) {
-          err.textContent = 'Unknown bloodline or incorrect oath.'; return;
-        }
-        // Cache locally so future logins on this device are instant
-        localUsers[username] = userData;
-        LS.set('users', localUsers);
-        loginUser({ username: userData.username, displayName: userData.displayName }, true);
-
-      } catch (e) {
-        if (e.message === 'timeout') {
-          err.textContent = 'Connection timed out. Check your internet and try again.';
-        } else {
-          err.textContent = 'Could not reach the dark records: ' + e.message;
-        }
-        console.error('Firestore fetch error:', e);
-      } finally {
-        submitBtn.disabled    = false;
-        submitBtn.textContent = 'Enter';
-      }
     }
+
+  } catch (e) {
+    console.error('Auth error:', e);
+    err.textContent = 'Something went wrong: ' + e.message;
+  } finally {
+    submitBtn.disabled    = false;
+    submitBtn.textContent = authMode === 'register' ? 'Become One of Us' : 'Enter';
   }
 }
 
-function loginUser(userData, save) {
+function loginUser(userData, saveSession) {
   currentUser = userData;
-  if (save) LS.set('current_session', userData);
+
+  if (saveSession) {
+    // Store session in sessionStorage (tab memory) + a token in Firebase
+    // so the session survives page refresh within the same tab
+    const token = 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    sessionStorage.setItem('session_token', token);
+    sessionStorage.setItem('session_user', JSON.stringify(userData));
+    // Write token to Firebase so we can verify it on reload
+    rtdb.ref('sessions/' + token).set({
+      username: userData.username,
+      createdAt: Date.now()
+    });
+    // Auto-expire session token after 7 days
+    setTimeout(() => rtdb.ref('sessions/' + token).remove(), 7 * 24 * 60 * 60 * 1000);
+  }
+
   document.getElementById('topbar-username').textContent = userData.displayName || userData.username;
   showScreen('app');
-  // Pull all existing annotations from Firestore into localStorage first,
-  // then start the real-time listener (which fires for future changes).
-  db.collection('annotations').get().then(snap => {
-    const anns = [];
-    snap.forEach(doc => anns.push(doc.data()));
-    LS.set('annotations', anns);
+
+  // Pull annotations from Firestore (silently, don't block login)
+  if (db) {
+    db.collection('annotations').get()
+      .then(snap => {
+        const anns = [];
+        snap.forEach(doc => anns.push(doc.data()));
+        LS.set('annotations', anns);
+        renderAnnotations();
+      }).catch(() => renderAnnotations());
+
+    db.collection('library').get()
+      .then(snap => {
+        const lib = [];
+        snap.forEach(doc => lib.push(doc.data()));
+        LS.set('library', lib);
+        renderLibrary();
+      }).catch(() => renderLibrary());
+  } else {
     renderAnnotations();
-  }).catch(() => renderAnnotations());
-  // Pull library from Firestore
-  db.collection('library').get().then(snap => {
-    const lib = [];
-    snap.forEach(doc => lib.push(doc.data()));
-    LS.set('library', lib);
     renderLibrary();
-  }).catch(() => {});
-  startPresence(); // starts annotation + library listeners + RTDB presence
+  }
+
+  startPresence();
 }
 
 document.getElementById('logout-btn').addEventListener('click', () => {
   if (currentUser) {
     presenceRef?.remove();
     readingRef?.remove();
+    // Remove session token from Firebase
+    const token = sessionStorage.getItem('session_token');
+    if (token) rtdb.ref('sessions/' + token).remove();
   }
   if (annUnsubscribe) { annUnsubscribe(); annUnsubscribe = null; }
   if (libUnsubscribe) { libUnsubscribe(); libUnsubscribe = null; }
-  LS.del('current_session');
+  // Clear session from browser memory
+  sessionStorage.removeItem('session_token');
+  sessionStorage.removeItem('session_user');
   currentUser = null;
   onlineUsers.clear();
   renderOnlineBar();
