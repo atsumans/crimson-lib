@@ -1068,6 +1068,15 @@ function startLibraryListener() {
       LS.set('library', library);
       renderLibrary();
     }, err => console.error('Library listener error:', err));
+
+  // Listen for EPUB files shared by any user via Realtime Database
+  rtdb.ref('epub_files').on('child_added', async snap => {
+    const bookId  = snap.key;
+    const payload = snap.val();
+    if (!payload || epubVault.has(bookId)) return; // already loaded, skip
+    showSyncToast(`${payload.uploadedBy} opened "${payload.title}" — loading for you…`);
+    await loadEpubFromBase64(bookId, payload.title, payload.data);
+  });
 }
 
 function pushLibraryBook(bookMeta) {
@@ -1078,6 +1087,9 @@ function pushLibraryBook(bookMeta) {
 function removeLibraryBook(bookId) {
   db.collection('library').doc(bookId).delete()
     .catch(e => console.error('Library delete failed:', e));
+  // Also remove the epub binary from Realtime Database
+  rtdb.ref('epub_files/' + bookId).remove()
+    .catch(e => console.error('RTDB epub remove failed:', e));
 }
 
 // ── PRESENCE & CHAPTER POSITION ─────────────────────────
@@ -1391,7 +1403,16 @@ dropZone.addEventListener('drop', e => {
 async function loadEpub(file) {
   progress(10);
   const buf = await file.arrayBuffer();
-  progress(30);
+  progress(20);
+
+  // Convert to base64 so we can share via Firebase Realtime Database
+  const base64 = await new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(',')[1]);
+    reader.readAsDataURL(new Blob([buf]));
+  });
+
+  progress(35);
   const zip = await JSZip.loadAsync(buf);
   progress(50);
 
@@ -1424,7 +1445,7 @@ async function loadEpub(file) {
     bookMeta = { id: bookId, title: bookTitle, addedAt: new Date().toLocaleDateString(), chapterProgress: 0 };
     library.push(bookMeta);
     LS.set('library', library);
-    pushLibraryBook(bookMeta); // ← sync new book to Firestore for all users
+    pushLibraryBook(bookMeta);
   } else {
     bookId = bookMeta.id;
   }
@@ -1432,12 +1453,74 @@ async function loadEpub(file) {
   // Store parsed data in memory vault
   epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle });
 
+  // Push EPUB binary to Realtime Database so other users get it automatically
+  // Only upload if not already stored there
+  rtdb.ref('epub_files/' + bookId).get().then(snap => {
+    if (!snap.exists()) {
+      rtdb.ref('epub_files/' + bookId).set({
+        title:      bookTitle,
+        uploadedBy: currentUser?.displayName || currentUser?.username || 'someone',
+        data:       base64,
+        uploadedAt: Date.now()
+      }).then(() => console.log('✅ EPUB shared to Firebase'))
+        .catch(e => console.warn('⚠️ EPUB share failed (file may be too large):', e.message));
+    }
+  });
+
   progress(80);
   await switchToBook(bookId);
   progress(100);
   setTimeout(() => progress(0), 600);
 }
 
+// Called automatically when another user shares an EPUB via Realtime Database
+async function loadEpubFromBase64(bookId, bookTitle, base64) {
+  try {
+    // Decode base64 back to binary
+    const binary = atob(base64);
+    const bytes  = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+    const zip = await JSZip.loadAsync(bytes.buffer);
+    const containerXml = await zip.file('META-INF/container.xml').async('string');
+    const opfPath = new DOMParser().parseFromString(containerXml, 'application/xml')
+      .querySelector('rootfile').getAttribute('full-path');
+    const opfDir  = opfPath.substring(0, opfPath.lastIndexOf('/') + 1);
+    const opfDoc  = new DOMParser().parseFromString(
+      await zip.file(opfPath).async('string'), 'application/xml'
+    );
+
+    const manifest = {};
+    opfDoc.querySelectorAll('manifest item').forEach(el => {
+      manifest[el.getAttribute('id')] = {
+        href: opfDir + el.getAttribute('href'),
+        mediaType: el.getAttribute('media-type')
+      };
+    });
+
+    const spine = [];
+    opfDoc.querySelectorAll('spine itemref').forEach(el => {
+      const id = el.getAttribute('idref');
+      if (manifest[id]) spine.push({ id, ...manifest[id] });
+    });
+
+    // Store in vault so the book is readable
+    epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle });
+
+    // Add to library list if not already there
+    const library = LS.get('library') || [];
+    if (!library.find(b => b.id === bookId)) {
+      library.push({ id: bookId, title: bookTitle, addedAt: new Date().toLocaleDateString(), chapterProgress: 0 });
+      LS.set('library', library);
+    }
+
+    renderLibrary();
+    showSyncToast(`"${bookTitle}" is now ready to read`);
+  } catch(e) {
+    console.error('Failed to load shared EPUB:', e);
+    showSyncToast('Could not load the shared book — it may be too large');
+  }
+}
 async function switchToBook(bookId) {
   if (!epubVault.has(bookId)) {
     showSyncToast('Re-upload this tome — files cannot persist across sessions');
