@@ -564,31 +564,36 @@ body.theme-light {
 .chapter-nav-btn:hover { border-color: var(--blood-bright); color: var(--blood-bright); }
 .chapter-nav-btn:disabled { opacity: .25; cursor: not-allowed; }
 
-/* ── HIGHLIGHTS ── */
+/* ── HIGHLIGHTS — !important beats any EPUB stylesheet ── */
 .epub-highlight {
-  background: rgba(139,0,0,0.25);
-  border-bottom: 1.5px solid rgba(180,0,0,0.6);
-  border-radius: 2px;
-  cursor: pointer;
-  position: relative;
-  transition: background .2s;
+  background: rgba(139,0,0,0.30) !important;
+  border-bottom: 2px solid rgba(180,0,0,0.8) !important;
+  border-radius: 2px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  transition: background .2s !important;
+  display: inline !important;
+  color: inherit !important;
+  text-decoration: none !important;
 }
-.epub-highlight:hover { background: rgba(139,0,0,0.4); }
-.epub-highlight.mine { background: rgba(160,0,0,0.3); border-bottom-color: #cc1111; }
-.epub-highlight.selected-ann { background: rgba(200,0,0,0.5); box-shadow: 0 0 8px rgba(139,0,0,0.6); }
+.epub-highlight:hover { background: rgba(139,0,0,0.5) !important; }
+.epub-highlight.selected-ann {
+  background: rgba(200,0,0,0.55) !important;
+  box-shadow: 0 0 10px rgba(139,0,0,0.7) !important;
+  outline: 1px solid rgba(200,0,0,0.6) !important;
+}
 
-/* Per-user colors — up to 10 users each get a unique color */
-.epub-highlight.ucolor-0 { background: rgba(160,0,0,0.28);    border-bottom-color: #cc1111; }
-.epub-highlight.ucolor-1 { background: rgba(60,0,100,0.28);   border-bottom-color: #7722cc; }
-.epub-highlight.ucolor-2 { background: rgba(0,80,120,0.28);   border-bottom-color: #1188cc; }
-.epub-highlight.ucolor-3 { background: rgba(0,100,60,0.28);   border-bottom-color: #11aa66; }
-.epub-highlight.ucolor-4 { background: rgba(140,80,0,0.28);   border-bottom-color: #cc8800; }
-.epub-highlight.ucolor-5 { background: rgba(160,0,80,0.28);   border-bottom-color: #cc1177; }
-.epub-highlight.ucolor-6 { background: rgba(0,120,120,0.28);  border-bottom-color: #00aaaa; }
-.epub-highlight.ucolor-7 { background: rgba(80,40,0,0.28);    border-bottom-color: #aa6622; }
-.epub-highlight.ucolor-8 { background: rgba(60,60,140,0.28);  border-bottom-color: #5566cc; }
-.epub-highlight.ucolor-9 { background: rgba(100,0,100,0.28);  border-bottom-color: #aa22aa; }
-
+/* Per-user colors — !important overrides any EPUB CSS */
+.epub-highlight.ucolor-0 { background: rgba(160,0,0,0.35)   !important; border-bottom-color: #cc1111 !important; }
+.epub-highlight.ucolor-1 { background: rgba(60,0,100,0.35)  !important; border-bottom-color: #7722cc !important; }
+.epub-highlight.ucolor-2 { background: rgba(0,80,120,0.35)  !important; border-bottom-color: #1188cc !important; }
+.epub-highlight.ucolor-3 { background: rgba(0,100,60,0.35)  !important; border-bottom-color: #11aa66 !important; }
+.epub-highlight.ucolor-4 { background: rgba(140,80,0,0.35)  !important; border-bottom-color: #cc8800 !important; }
+.epub-highlight.ucolor-5 { background: rgba(160,0,80,0.35)  !important; border-bottom-color: #cc1177 !important; }
+.epub-highlight.ucolor-6 { background: rgba(0,120,120,0.35) !important; border-bottom-color: #00aaaa !important; }
+.epub-highlight.ucolor-7 { background: rgba(80,40,0,0.35)   !important; border-bottom-color: #aa6622 !important; }
+.epub-highlight.ucolor-8 { background: rgba(60,60,140,0.35) !important; border-bottom-color: #5566cc !important; }
+.epub-highlight.ucolor-9 { background: rgba(100,0,100,0.35) !important; border-bottom-color: #aa22aa !important; }
 /* Same colors for annotation cards */
 .ann-card.ucolor-0 { border-left-color: #cc1111; }
 .ann-card.ucolor-1 { border-left-color: #7722cc; }
@@ -723,8 +728,8 @@ body.theme-light {
   cursor: pointer; transition: all .2s;
 }
 .panel-toggle:hover { border-color: var(--blood-bright); color: var(--blood-bright); }
-#toggle-toc { top: 8px; left: 8px; }
-#toggle-ann { top: 8px; right: 8px; }
+#toggle-toc { top: 10px; left: 10px; z-index: 20; }
+#toggle-ann { top: 10px; right: 10px; z-index: 20; }
 
 /* ── COMMENT MODAL ── */
 #comment-modal {
@@ -935,7 +940,7 @@ body.theme-light {
 
     <!-- toc -->
     <div id="toc-panel">
-      <div class="panel-heading">   Chapters</div>
+      <div class="panel-heading" style="padding-left:44px">Chapters</div>
       <div class="spine-list" id="spine-list"></div>
     </div>
 
