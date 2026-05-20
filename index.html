@@ -1219,17 +1219,20 @@ function checkSitePass() {
   const val = document.getElementById('site-pass-input').value.trim().toLowerCase();
   if (val === SITE_PASS) {
     sessionStorage.setItem('site_pass_ok', '1');
-    // Check if session exists
+    // Just check sessionStorage — no Firebase call needed here.
+    // If a session token exists, go to app; otherwise go to login screen.
     const sessionToken = sessionStorage.getItem('session_token');
     const sessionUser  = sessionStorage.getItem('session_user');
     if (sessionToken && sessionUser) {
+      // Has a saved session — restore it directly, verify Firebase in background
+      const userData = JSON.parse(sessionUser);
+      loginUser(userData, false);
+      // Silently verify token is still valid in background
       rtdb.ref('sessions/' + sessionToken).get()
-        .then(snap => {
-          if (snap.exists()) loginUser(JSON.parse(sessionUser), false);
-          else showScreen('auth');
-        })
-        .catch(() => showScreen('auth'));
+        .then(snap => { if (!snap.exists()) { sessionStorage.clear(); showScreen('auth'); } })
+        .catch(() => {}); // if Firebase is slow, don't punish the user
     } else {
+      // No session — go to login/register screen
       showScreen('auth');
     }
   } else {
