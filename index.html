@@ -964,10 +964,17 @@ const firebaseConfig = {
 };
 // ▲▲▲ PASTE YOUR FIREBASE CONFIG HERE ▲▲▲
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-db.settings({ experimentalForceLongPolling: true, merge: true });
-const rtdb = firebase.database();
+let db, rtdb;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  // Force long-polling — fixes "client is offline" on GitHub Pages
+  db.settings({ experimentalForceLongPolling: true, merge: true });
+  rtdb = firebase.database();
+  console.log('✅ Firebase initialized');
+} catch(e) {
+  console.error('❌ Firebase init error:', e.message);
+}
 
 let currentUser    = null;
 let annUnsubscribe = null;   // Firestore real-time listener teardown fn
@@ -1216,15 +1223,14 @@ document.getElementById('auth-submit-btn').addEventListener('click', handleAuth)
 });
 
 async function handleAuth() {
-  const username    = document.getElementById('auth-username').value.trim().toLowerCase();
-  const password    = document.getElementById('auth-password').value;
-  const err         = document.getElementById('auth-error');
-  const submitBtn   = document.getElementById('auth-submit-btn');
-  err.textContent   = '';
+  const username  = document.getElementById('auth-username').value.trim().toLowerCase();
+  const password  = document.getElementById('auth-password').value;
+  const err       = document.getElementById('auth-error');
+  const submitBtn = document.getElementById('auth-submit-btn');
+  err.textContent = '';
 
   if (!username || !password) { err.textContent = 'All fields must be filled, creature.'; return; }
 
-  // Disable button while talking to Firestore
   submitBtn.disabled    = true;
   submitBtn.textContent = 'Consulting the dark records…';
 
@@ -1232,31 +1238,61 @@ async function handleAuth() {
     if (authMode === 'register') {
       const displayName = document.getElementById('reg-name').value.trim() || username;
       const confirm     = document.getElementById('reg-confirm').value;
-      if (password !== confirm)  { err.textContent = 'Your blood oaths do not match.'; return; }
-      if (password.length < 4)   { err.textContent = 'Your oath must be at least 4 characters.'; return; }
+      if (password !== confirm) { err.textContent = 'Your blood oaths do not match.'; return; }
+      if (password.length < 4)  { err.textContent = 'Your oath must be at least 4 characters.'; return; }
 
-      // Check if username already taken in Firestore
-      const existing = await db.collection('users').doc(username).get();
-      if (existing.exists) { err.textContent = 'This bloodline already exists in our records.'; return; }
+      // Check existing — try Firestore, fall back to localStorage
+      let alreadyExists = false;
+      try {
+        const snap = await db.collection('users').doc(username).get();
+        alreadyExists = snap.exists;
+      } catch {
+        const localUsers = LS.get('users') || {};
+        alreadyExists = !!localUsers[username];
+      }
+      if (alreadyExists) { err.textContent = 'This bloodline already exists in our records.'; return; }
 
-      // Save new user to Firestore
       const userData = { username, displayName, passwordHash: btoa(password), createdAt: Date.now() };
-      await db.collection('users').doc(username).set(userData);
+
+      // Save to Firestore AND localStorage
+      try { await db.collection('users').doc(username).set(userData); }
+      catch (e) { console.warn('Firestore save failed, saved locally:', e.message); }
+      const localUsers = LS.get('users') || {};
+      localUsers[username] = userData;
+      LS.set('users', localUsers);
+
       loginUser({ username, displayName }, true);
 
     } else {
-      // Login — fetch user doc from Firestore
-      const doc = await db.collection('users').doc(username).get();
-      if (!doc.exists) { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
-      const userData = doc.data();
-      if (userData.passwordHash !== btoa(password)) { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
+      // LOGIN — try Firestore first, fall back to localStorage
+      let userData = null;
+      try {
+        const doc = await db.collection('users').doc(username).get();
+        if (doc.exists) {
+          userData = doc.data();
+          // Cache locally for offline future logins
+          const localUsers = LS.get('users') || {};
+          localUsers[username] = userData;
+          LS.set('users', localUsers);
+        }
+      } catch (e) {
+        console.warn('Firestore unavailable, checking localStorage:', e.message);
+      }
 
-      // Remember session in localStorage so they stay logged in on this device
+      // Fall back to localStorage
+      if (!userData) {
+        const localUsers = LS.get('users') || {};
+        userData = localUsers[username] || null;
+      }
+
+      if (!userData)                                    { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
+      if (userData.passwordHash !== btoa(password))     { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
+
       loginUser({ username: userData.username, displayName: userData.displayName }, true);
     }
   } catch (e) {
-    err.textContent = 'The shadows are unresponsive. Check your connection.';
     console.error('Auth error:', e);
+    err.textContent = 'Something went wrong: ' + e.message;
   } finally {
     submitBtn.disabled    = false;
     submitBtn.textContent = authMode === 'register' ? 'Become One of Us' : 'Enter';
