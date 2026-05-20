@@ -251,10 +251,11 @@ html, body {
 #screen-app {
   align-items: stretch;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 #screen-app { display: none; }
 #screen-app.active { display: flex; }
-
 /* ── TOPBAR ── */
 #topbar {
   background: linear-gradient(90deg, var(--void) 0%, var(--shadow) 50%, var(--void) 100%);
@@ -283,6 +284,38 @@ html, body {
   text-shadow: var(--glow-blood);
   letter-spacing: .05em;
   white-space: nowrap;
+}
+.theme-opt {
+  background: rgba(139,0,0,0.1);
+  border: 1px solid rgba(139,0,0,0.25);
+  border-radius: 3px;
+  color: var(--parchment);
+  font-family: var(--font-title);
+  font-size: .72rem;
+  letter-spacing: .08em;
+  padding: 7px 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all .2s;
+}
+.theme-opt:hover { background: rgba(139,0,0,0.25); border-color: var(--blood); }
+.theme-opt.active { background: var(--blood-dim); border-color: var(--blood-bright); color: #fff; }
+
+/* ── THEMES ── */
+body.theme-dim {
+  --void: #1a0a0a; --abyss: #220d0d; --shadow: #2a1010;
+}
+body.theme-parchment {
+  --void: #f0e6d0; --abyss: #f5edd8; --shadow: #ede0c4;
+  --parchment: #2a1a0a; --parchment-dark: #3a2010;
+  --silver: #5a4030; --silver-dim: #7a6050;
+  --bone: #2a1a0a;
+}
+body.theme-light {
+  --void: #f8f4ee; --abyss: #ffffff; --shadow: #f0ebe0;
+  --parchment: #1a0a00; --parchment-dark: #2a1500;
+  --silver: #4a3520; --silver-dim: #6a5540;
+  --bone: #1a0a00;
 }
 .topbar-sep { color: rgba(139,0,0,0.4); font-size: .8rem; }
 #book-title-display {
@@ -335,6 +368,7 @@ html, body {
 #workspace {
   display: flex;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   position: relative;
   z-index: 10;
@@ -387,7 +421,9 @@ html, body {
 /* ── READING AREA ── */
 #reading-area {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 40px 32px;
   position: relative;
   background: var(--abyss);
@@ -819,10 +855,33 @@ html, body {
     <div class="topbar-brand">Sanguis Libri</div>
     <div class="topbar-sep">✦</div>
     <div id="book-title-display" style="font-style:italic;opacity:.5">No tome selected…</div>
-    <label class="upload-epub-btn" for="file-input">
-      <span>📜</span> Open Tome
-    </label>
+
+    <!-- Library dropdown -->
+    <div style="position:relative">
+      <button class="upload-epub-btn" id="library-dropdown-btn">📚 Library ▾</button>
+      <div id="library-dropdown" style="display:none;position:absolute;top:38px;left:0;min-width:220px;background:var(--shadow);border:1px solid rgba(139,0,0,0.4);border-radius:4px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.6);max-height:320px;overflow-y:auto">
+        <div id="library-dropdown-list" style="padding:6px 0"></div>
+        <div style="border-top:1px solid rgba(139,0,0,0.2);padding:8px 10px">
+          <label class="upload-epub-btn" for="file-input" style="width:100%;justify-content:center;font-size:.7rem">+ Open New Tome</label>
+        </div>
+      </div>
+    </div>
     <input type="file" id="file-input" accept=".epub">
+
+    <!-- Settings dropdown -->
+    <div style="position:relative">
+      <button class="upload-epub-btn" id="settings-btn">⚙ Theme ▾</button>
+      <div id="settings-dropdown" style="display:none;position:absolute;top:38px;right:0;width:200px;background:var(--shadow);border:1px solid rgba(139,0,0,0.4);border-radius:4px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.6);padding:14px">
+        <div style="font-family:var(--font-title);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Background</div>
+        <div style="display:flex;flex-direction:column;gap:8px" id="theme-options">
+          <button class="theme-opt active" data-theme="dark">🌑 Void Dark</button>
+          <button class="theme-opt" data-theme="dim">🌘 Dim Crimson</button>
+          <button class="theme-opt" data-theme="parchment">📜 Parchment</button>
+          <button class="theme-opt" data-theme="light">☀ Light</button>
+        </div>
+      </div>
+    </div>
+
     <div class="user-badge" id="user-badge-btn">
       <div class="user-dot"></div>
       <span id="topbar-username">—</span>
@@ -1013,46 +1072,48 @@ function showSyncToast(msg) {
 }
 
 // ── ANNOTATIONS ─────────────────────────────────────────
-// Write a new annotation to Firestore
+// Write annotation to Realtime Database (faster and more reliable than Firestore)
 function broadcast(type, payload) {
   if (type === 'annotation_add') {
-    db.collection('annotations').doc(payload.id).set(payload)
-      .catch(e => console.error('Firestore write failed:', e));
+    rtdb.ref('annotations/' + payload.id).set(payload)
+      .catch(e => console.error('RTDB annotation write failed:', e));
   } else if (type === 'annotation_del') {
-    db.collection('annotations').doc(payload.id).delete()
-      .catch(e => console.error('Firestore delete failed:', e));
+    rtdb.ref('annotations/' + payload.id).remove()
+      .catch(e => console.error('RTDB annotation delete failed:', e));
   }
 }
 
 // Listen for annotation changes from ALL users in real time
 function startAnnotationListener() {
-  if (annUnsubscribe) annUnsubscribe();
-  annUnsubscribe = db.collection('annotations')
-    .onSnapshot(snapshot => {
-      snapshot.docChanges().forEach(change => {
-        const ann = change.doc.data();
-        if (change.type === 'added' || change.type === 'modified') {
-          const anns = LS.get('annotations') || [];
-          const idx  = anns.findIndex(a => a.id === ann.id);
-          if (idx === -1) anns.push(ann); else anns[idx] = ann;
-          LS.set('annotations', anns);
-          renderAnnotations();
-          if (ann.bookId === activeBookId && ann.chapterIndex === currentSpineIndex) {
-            removeHighlightFromDOM(ann.id);
-            applyHighlightToDOM(ann);
-          }
-          if (ann.username !== currentUser?.username) {
-            showSyncToast(`${ann.displayName || ann.username} marked a passage`);
-          }
-        } else if (change.type === 'removed') {
-          let anns = LS.get('annotations') || [];
-          anns = anns.filter(a => a.id !== ann.id);
-          LS.set('annotations', anns);
-          removeHighlightFromDOM(ann.id);
-          renderAnnotations();
-        }
-      });
-    }, err => console.error('Annotation listener error:', err));
+  // child_added fires for all existing + new annotations
+  rtdb.ref('annotations').on('child_added', snap => {
+    const ann = snap.val();
+    if (!ann) return;
+    const anns = LS.get('annotations') || [];
+    if (!anns.find(a => a.id === ann.id)) {
+      anns.push(ann);
+      LS.set('annotations', anns);
+    }
+    renderAnnotations();
+    if (ann.bookId === activeBookId && ann.chapterIndex === currentSpineIndex) {
+      removeHighlightFromDOM(ann.id);
+      applyHighlightToDOM(ann);
+    }
+    if (ann.username !== currentUser?.username) {
+      showSyncToast(`${ann.displayName || ann.username} marked a passage`);
+    }
+  });
+
+  // child_removed fires when an annotation is deleted
+  rtdb.ref('annotations').on('child_removed', snap => {
+    const ann = snap.val();
+    if (!ann) return;
+    let anns = LS.get('annotations') || [];
+    anns = anns.filter(a => a.id !== ann.id);
+    LS.set('annotations', anns);
+    removeHighlightFromDOM(ann.id);
+    renderAnnotations();
+  });
 }
 
 // ── LIBRARY SYNC ─────────────────────────────────────────
@@ -1877,6 +1938,85 @@ function progress(pct) { document.getElementById('progress-bar').style.width = p
 // ═══════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// LIBRARY DROPDOWN
+// ═══════════════════════════════════════════════════════
+function renderLibraryDropdown() {
+  const ddList  = document.getElementById('library-dropdown-list');
+  const library = LS.get('library') || [];
+  if (!ddList) return;
+  if (library.length === 0) {
+    ddList.innerHTML = '<div style="padding:10px 14px;font-family:var(--font-prose);font-style:italic;color:var(--silver-dim);font-size:.85rem">No tomes yet…</div>';
+    return;
+  }
+  ddList.innerHTML = '';
+  library.forEach(book => {
+    const inMemory = epubVault.has(book.id);
+    const isActive = book.id === activeBookId;
+    const el = document.createElement('div');
+    el.style.cssText = `padding:10px 14px;cursor:pointer;border-left:2px solid ${isActive ? 'var(--blood-bright)' : 'transparent'};background:${isActive ? 'rgba(139,0,0,0.12)' : 'transparent'};transition:all .2s`;
+    el.innerHTML = `
+      <div style="font-family:var(--font-prose);font-size:.88rem;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px">${esc(book.title)}</div>
+      <div style="font-family:var(--font-title);font-size:.6rem;letter-spacing:.06em;color:var(--silver-dim);text-transform:uppercase;margin-top:2px">Ch.${(book.chapterProgress||0)+1} · ${inMemory ? '🩸 loaded' : '⚰ upload to read'}</div>`;
+    el.addEventListener('mouseenter', () => { if (!isActive) el.style.background = 'rgba(139,0,0,0.07)'; });
+    el.addEventListener('mouseleave', () => { if (!isActive) el.style.background = 'transparent'; });
+    el.addEventListener('click', async () => {
+      document.getElementById('library-dropdown').style.display = 'none';
+      if (!inMemory) { showSyncToast('Re-upload this tome — files cannot persist across sessions'); return; }
+      saveChapterProgress();
+      await switchToBook(book.id);
+    });
+    ddList.appendChild(el);
+  });
+}
+
+// Toggle library dropdown
+document.getElementById('library-dropdown-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  const dd = document.getElementById('library-dropdown');
+  const isOpen = dd.style.display !== 'none';
+  document.getElementById('settings-dropdown').style.display = 'none';
+  dd.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) renderLibraryDropdown();
+});
+
+// Toggle settings dropdown
+document.getElementById('settings-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  const dd = document.getElementById('settings-dropdown');
+  const isOpen = dd.style.display !== 'none';
+  document.getElementById('library-dropdown').style.display = 'none';
+  dd.style.display = isOpen ? 'none' : 'block';
+});
+
+// Close dropdowns when clicking anywhere else
+document.addEventListener('click', () => {
+  document.getElementById('library-dropdown').style.display = 'none';
+  document.getElementById('settings-dropdown').style.display  = 'none';
+});
+
+// ═══════════════════════════════════════════════════════
+// THEME SWITCHER
+// ═══════════════════════════════════════════════════════
+const THEMES = ['dark','dim','parchment','light'];
+// Restore saved theme
+const savedTheme = sessionStorage.getItem('theme') || 'dark';
+applyTheme(savedTheme);
+
+document.getElementById('theme-options').addEventListener('click', e => {
+  const btn = e.target.closest('.theme-opt');
+  if (!btn) return;
+  applyTheme(btn.dataset.theme);
+  sessionStorage.setItem('theme', btn.dataset.theme);
+});
+
+function applyTheme(theme) {
+  THEMES.forEach(t => document.body.classList.remove('theme-' + t));
+  if (theme !== 'dark') document.body.classList.add('theme-' + theme);
+  document.querySelectorAll('.theme-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.theme === theme);
+  });
+}
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
