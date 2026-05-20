@@ -968,8 +968,12 @@ let db, rtdb;
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
-  // Force long-polling — fixes "client is offline" on GitHub Pages
+  // Auto-detect best polling method — do NOT use experimentalForceLongPolling together with this
   db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+  // Enable offline persistence so Firestore works even when connection is flaky
+  db.enablePersistence({ synchronizeTabs: true }).catch(e => {
+    console.warn('Persistence unavailable:', e.code);
+  });
   rtdb = firebase.database();
   console.log('✅ Firebase initialized');
 } catch(e) {
@@ -1230,72 +1234,77 @@ async function handleAuth() {
   err.textContent = '';
 
   if (!username || !password) { err.textContent = 'All fields must be filled, creature.'; return; }
+  if (!/^[a-z0-9_]+$/.test(username)) { err.textContent = 'Username: letters, numbers, underscores only.'; return; }
 
-  submitBtn.disabled    = true;
-  submitBtn.textContent = 'Consulting the dark records…';
+  const localUsers = LS.get('users') || {};
 
-  try {
-    if (authMode === 'register') {
-      const displayName = document.getElementById('reg-name').value.trim() || username;
-      const confirm     = document.getElementById('reg-confirm').value;
-      if (password !== confirm) { err.textContent = 'Your blood oaths do not match.'; return; }
-      if (password.length < 4)  { err.textContent = 'Your oath must be at least 4 characters.'; return; }
+  if (authMode === 'register') {
+    const displayName = document.getElementById('reg-name').value.trim() || username;
+    const confirm     = document.getElementById('reg-confirm').value;
+    if (password !== confirm) { err.textContent = 'Your blood oaths do not match.'; return; }
+    if (password.length < 4)  { err.textContent = 'Your oath must be at least 4 characters.'; return; }
+    if (localUsers[username]) { err.textContent = 'This bloodline already exists in our records.'; return; }
 
-      // Check existing — try Firestore, fall back to localStorage
-      let alreadyExists = false;
-      try {
-        const snap = await db.collection('users').doc(username).get();
-        alreadyExists = snap.exists;
-      } catch {
-        const localUsers = LS.get('users') || {};
-        alreadyExists = !!localUsers[username];
+    const userData = { username, displayName, passwordHash: btoa(password), createdAt: Date.now() };
+
+    // Save to localStorage IMMEDIATELY — no waiting
+    localUsers[username] = userData;
+    LS.set('users', localUsers);
+
+    // Sync to Firestore silently in the background — don't wait for it
+    if (db) {
+      db.collection('users').doc(username).set(userData)
+        .then(() => console.log('✅ User synced to Firestore'))
+        .catch(e => console.warn('⚠️ Firestore sync failed (user still saved locally):', e.message));
+    }
+
+    loginUser({ username, displayName }, true);
+
+  } else {
+    // LOGIN — check localStorage first (instant), then try Firestore if not found
+    let userData = localUsers[username] || null;
+
+    if (userData) {
+      // Found locally — verify password immediately
+      if (userData.passwordHash !== btoa(password)) {
+        err.textContent = 'Unknown bloodline or incorrect oath.'; return;
       }
-      if (alreadyExists) { err.textContent = 'This bloodline already exists in our records.'; return; }
-
-      const userData = { username, displayName, passwordHash: btoa(password), createdAt: Date.now() };
-
-      // Save to Firestore AND localStorage
-      try { await db.collection('users').doc(username).set(userData); }
-      catch (e) { console.warn('Firestore save failed, saved locally:', e.message); }
-      const localUsers = LS.get('users') || {};
-      localUsers[username] = userData;
-      LS.set('users', localUsers);
-
-      loginUser({ username, displayName }, true);
+      loginUser({ username: userData.username, displayName: userData.displayName }, true);
 
     } else {
-      // LOGIN — try Firestore first, fall back to localStorage
-      let userData = null;
+      // Not in localStorage — must fetch from Firestore (first login on new device)
+      submitBtn.disabled    = true;
+      submitBtn.textContent = 'Searching the ancient records…';
       try {
-        const doc = await db.collection('users').doc(username).get();
-        if (doc.exists) {
-          userData = doc.data();
-          // Cache locally for offline future logins
-          const localUsers = LS.get('users') || {};
-          localUsers[username] = userData;
-          LS.set('users', localUsers);
+        // Add a 10 second timeout so it never hangs forever
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 10000)
+        );
+        const fetchPromise = db.collection('users').doc(username).get();
+        const doc = await Promise.race([fetchPromise, timeoutPromise]);
+
+        if (!doc.exists) { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
+        userData = doc.data();
+        if (userData.passwordHash !== btoa(password)) {
+          err.textContent = 'Unknown bloodline or incorrect oath.'; return;
         }
+        // Cache locally so future logins on this device are instant
+        localUsers[username] = userData;
+        LS.set('users', localUsers);
+        loginUser({ username: userData.username, displayName: userData.displayName }, true);
+
       } catch (e) {
-        console.warn('Firestore unavailable, checking localStorage:', e.message);
+        if (e.message === 'timeout') {
+          err.textContent = 'Connection timed out. Check your internet and try again.';
+        } else {
+          err.textContent = 'Could not reach the dark records: ' + e.message;
+        }
+        console.error('Firestore fetch error:', e);
+      } finally {
+        submitBtn.disabled    = false;
+        submitBtn.textContent = 'Enter';
       }
-
-      // Fall back to localStorage
-      if (!userData) {
-        const localUsers = LS.get('users') || {};
-        userData = localUsers[username] || null;
-      }
-
-      if (!userData)                                    { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
-      if (userData.passwordHash !== btoa(password))     { err.textContent = 'Unknown bloodline or incorrect oath.'; return; }
-
-      loginUser({ username: userData.username, displayName: userData.displayName }, true);
     }
-  } catch (e) {
-    console.error('Auth error:', e);
-    err.textContent = 'Something went wrong: ' + e.message;
-  } finally {
-    submitBtn.disabled    = false;
-    submitBtn.textContent = authMode === 'register' ? 'Become One of Us' : 'Enter';
   }
 }
 
