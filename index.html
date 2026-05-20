@@ -1752,10 +1752,12 @@ async function renderChapter(index) {
   doc.querySelectorAll('style').forEach(s => { const ns = document.createElement('style'); ns.textContent = scopeCSS(s.textContent); bc.appendChild(ns); });
   Array.from(body.childNodes).forEach(n => bc.appendChild(document.importNode(n, true)));
 
-  // Re-apply saved highlights for this chapter (filtered by active book)
-  const anns = LS.get('annotations') || [];
-  anns.filter(a => a.bookId === activeBookId && a.chapterIndex === currentSpineIndex)
-      .forEach(a => applyHighlightToDOM(a));
+  // Re-apply saved highlights — small delay lets the DOM fully render first
+  setTimeout(() => {
+    const anns = LS.get('annotations') || [];
+    anns.filter(a => a.bookId === activeBookId && a.chapterIndex === currentSpineIndex)
+        .forEach(a => applyHighlightToDOM(a));
+  }, 120);
 
   document.getElementById('reading-area').scrollTop = 0;
   pushReadingPosition(); // update others on which chapter you are on
@@ -1869,19 +1871,32 @@ function applyHighlightToDOM(ann) {
 function wrapTextInContent(root, text, id, cls) {
   if (!text || !text.trim()) return;
 
-  // Strategy 1: fast path — find in a single text node
+  // Normalize whitespace in search text — EPUB often has extra spaces/newlines
+  const normalize = s => s.replace(/\s+/g, ' ').trim();
+  const needle = normalize(text);
+
+  // ── Strategy 1: single text node (fast path) ──
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node;
   while (node = walker.nextNode()) {
     if (node.parentElement.closest('.epub-highlight')) continue;
-    const idx = node.textContent.indexOf(text);
+    const haystack = normalize(node.textContent);
+    const idx = haystack.indexOf(needle);
     if (idx === -1) continue;
-    const before = node.textContent.slice(0, idx);
-    const after  = node.textContent.slice(idx + text.length);
+    // Find real char positions in original text
+    let realStart = 0, normalCount = 0;
+    for (let i = 0; i < node.textContent.length; i++) {
+      if (normalCount >= idx) { realStart = i; break; }
+      if (node.textContent[i] !== ' ' || (i > 0 && node.textContent[i-1] !== ' '))
+        normalCount++;
+    }
+    const before = node.textContent.slice(0, realStart);
+    const mid    = node.textContent.slice(realStart, realStart + text.length);
+    const after  = node.textContent.slice(realStart + text.length);
     const mark = document.createElement('mark');
     mark.className = 'epub-highlight ' + cls;
     mark.dataset.annId = id;
-    mark.textContent = text;
+    mark.textContent = mid || needle;
     mark.addEventListener('click', () => focusAnnotation(id));
     const parent = node.parentNode;
     if (before) parent.insertBefore(document.createTextNode(before), node);
@@ -1890,6 +1905,91 @@ function wrapTextInContent(root, text, id, cls) {
     parent.removeChild(node);
     return;
   }
+
+  // ── Strategy 2: text is split across inline elements (em, span, strong etc.) ──
+  // Search by scanning all block elements' full text content
+  const blocks = root.querySelectorAll('p, div, li, td, h1, h2, h3, h4, h5, h6, blockquote, section');
+  for (const block of blocks) {
+    if (block.querySelector('.epub-highlight')) continue;
+    if (!normalize(block.textContent).includes(needle)) continue;
+
+    // Collect all text nodes inside this block
+    const textNodes = [];
+    const tw = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+    let tn;
+    while (tn = tw.nextNode()) textNodes.push(tn);
+
+    // Build full concatenated text and map char positions back to nodes
+    let full = '';
+    const map = []; // map[charIndex] = { node, localIndex }
+    for (const tn of textNodes) {
+      for (let i = 0; i < tn.textContent.length; i++) {
+        map.push({ node: tn, localIndex: i });
+        full += tn.textContent[i];
+      }
+    }
+
+    const normFull = normalize(full);
+    const startNorm = normFull.indexOf(needle);
+    if (startNorm === -1) continue;
+
+    // Map normalized position back to real position
+    let realPos = 0, normPos = 0;
+    while (realPos < full.length && normPos < startNorm) {
+      const ch = full[realPos];
+      if (ch !== ' ' || (realPos > 0 && full[realPos-1] !== ' ')) normPos++;
+      realPos++;
+    }
+    const realStart = realPos;
+    const realEnd   = realStart + needle.length;
+    if (realEnd > map.length) continue;
+
+    // Group the range by node
+    const nodeRanges = new Map();
+    for (let i = realStart; i < realEnd && i < map.length; i++) {
+      const { node: n, localIndex: li } = map[i];
+      if (!nodeRanges.has(n)) nodeRanges.set(n, { start: li, end: li });
+      nodeRanges.get(n).end = li + 1;
+    }
+
+    // Wrap each node's portion
+    for (const [n, { start, end }] of nodeRanges) {
+      const before = n.textContent.slice(0, start);
+      const mid    = n.textContent.slice(start, end);
+      const after  = n.textContent.slice(end);
+      if (!mid) continue;
+      const mark = document.createElement('mark');
+      mark.className = 'epub-highlight ' + cls;
+      mark.dataset.annId = id;
+      mark.textContent = mid;
+      mark.addEventListener('click', () => focusAnnotation(id));
+      const parent = n.parentNode;
+      if (before) parent.insertBefore(document.createTextNode(before), n);
+      parent.insertBefore(mark, n);
+      if (after) parent.insertBefore(document.createTextNode(after), n);
+      parent.removeChild(n);
+    }
+    return;
+  }
+
+  // ── Strategy 3: absolute last resort — innerHTML replacement ──
+  try {
+    const allBlocks = root.querySelectorAll('p, div, li, h1, h2, h3, h4');
+    for (const block of allBlocks) {
+      if (!block.textContent.includes(text)) continue;
+      const esc2 = text.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      if (block.innerHTML.includes(esc2)) {
+        block.innerHTML = block.innerHTML.replace(
+          esc2,
+          `<mark class="epub-highlight ${cls}" data-ann-id="${id}">${esc2}</mark>`
+        );
+        block.querySelector(`[data-ann-id="${id}"]`)
+          ?.addEventListener('click', () => focusAnnotation(id));
+        return;
+      }
+    }
+  } catch(e) { console.warn('Highlight strategy 3 failed:', e); }
+}
 
   // Strategy 2: slow path — text is split across multiple nodes (spans, em, etc.)
   // Use innerHTML string search as a fallback
