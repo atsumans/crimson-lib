@@ -260,11 +260,12 @@ html, body {
 #topbar {
   background: linear-gradient(90deg, var(--void) 0%, var(--shadow) 50%, var(--void) 100%);
   border-bottom: 1px solid rgba(139,0,0,0.3);
-  height: 56px;
+  min-height: 56px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
   flex-shrink: 0;
   position: relative;
   z-index: 50;
@@ -393,6 +394,17 @@ body.theme-light {
 }
 #toc-panel.collapsed { width: 0; border-right: none; }
 
+@media (max-width: 600px) {
+  #toc-panel {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 75vw;
+    z-index: 150;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.7);
+  }
+  #toc-panel.collapsed { width: 0; }
+}
+
 .panel-heading {
   font-family: var(--font-title);
   font-size: .68rem;
@@ -485,20 +497,32 @@ body.theme-light {
   position: relative;
 }
 @media (max-width: 600px) {
-  #book-content { padding: 24px 18px; }
+  #book-content { padding: 24px 16px; }
   #book-page { padding: 0; }
-  #reading-area { padding: 14px 10px; }
+  #reading-area { padding: 12px 8px; }
   .chapter-nav { flex-direction: column; gap: 8px; }
   .chapter-nav-btn { width: 100%; text-align: center; }
-  #topbar { gap: 8px; padding: 0 10px; }
-  .topbar-brand { font-size: .75rem; }
   #book-title-display { display: none; }
-  #ann-panel { width: 100%; position: fixed; bottom: 0; left: 0; right: 0; height: 50vh; z-index: 80; border-left: none; border-top: 1px solid rgba(139,0,0,0.3); }
-  #ann-panel.collapsed { height: 0; }
-  #toc-panel { width: 80vw; position: fixed; top: 56px; left: 0; bottom: 0; z-index: 80; }
-  #toc-panel.collapsed { width: 0; }
-  .panel-toggle { padding: 8px 10px; font-size: .85rem; }
-  #sel-tooltip { flex-wrap: wrap; max-width: 94vw; left: 3vw !important; }
+  .topbar-brand { font-size: .8rem; }
+  .upload-epub-btn { font-size: .65rem; padding: 6px 10px; }
+  .gothic-btn { font-size: .65rem !important; padding: 6px 10px !important; }
+  .user-badge { font-size: .65rem; padding: 5px 8px; }
+
+  /* Annotations slide up from bottom on mobile */
+  #ann-panel {
+    width: 100% !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 45vh;
+    z-index: 100;
+    border-left: none;
+    border-top: 1px solid rgba(139,0,0,0.4);
+  }
+  #ann-panel.collapsed { height: 0 !important; }
+  #toggle-ann { bottom: 8px; top: auto; right: 8px; }
+
+  .panel-toggle { padding: 7px 9px; font-size: .8rem; }
+  #sel-tooltip { flex-wrap: wrap; max-width: 96vw; left: 2vw !important; top: auto !important; bottom: 60px; }
 }
 #book-content::before {
   content: '';
@@ -547,10 +571,43 @@ body.theme-light {
   transition: background .2s;
 }
 .epub-highlight:hover { background: rgba(139,0,0,0.4); }
-.epub-highlight.mine { background: rgba(160,0,0,0.3); border-bottom-color: var(--blood-bright); }
-.epub-highlight.other { background: rgba(60,0,100,0.3); border-bottom-color: #7722aa; }
-.epub-highlight.selected-ann { background: rgba(200,0,0,0.45); box-shadow: 0 0 8px rgba(139,0,0,0.5); }
+.epub-highlight.mine { background: rgba(160,0,0,0.3); border-bottom-color: #cc1111; }
+.epub-highlight.selected-ann { background: rgba(200,0,0,0.5); box-shadow: 0 0 8px rgba(139,0,0,0.6); }
 
+/* Per-user colors — up to 10 users each get a unique color */
+.epub-highlight.ucolor-0 { background: rgba(160,0,0,0.28);    border-bottom-color: #cc1111; }
+.epub-highlight.ucolor-1 { background: rgba(60,0,100,0.28);   border-bottom-color: #7722cc; }
+.epub-highlight.ucolor-2 { background: rgba(0,80,120,0.28);   border-bottom-color: #1188cc; }
+.epub-highlight.ucolor-3 { background: rgba(0,100,60,0.28);   border-bottom-color: #11aa66; }
+.epub-highlight.ucolor-4 { background: rgba(140,80,0,0.28);   border-bottom-color: #cc8800; }
+.epub-highlight.ucolor-5 { background: rgba(160,0,80,0.28);   border-bottom-color: #cc1177; }
+.epub-highlight.ucolor-6 { background: rgba(0,120,120,0.28);  border-bottom-color: #00aaaa; }
+.epub-highlight.ucolor-7 { background: rgba(80,40,0,0.28);    border-bottom-color: #aa6622; }
+.epub-highlight.ucolor-8 { background: rgba(60,60,140,0.28);  border-bottom-color: #5566cc; }
+.epub-highlight.ucolor-9 { background: rgba(100,0,100,0.28);  border-bottom-color: #aa22aa; }
+
+/* Same colors for annotation cards */
+.ann-card.ucolor-0 { border-left-color: #cc1111; }
+.ann-card.ucolor-1 { border-left-color: #7722cc; }
+.ann-card.ucolor-2 { border-left-color: #1188cc; }
+.ann-card.ucolor-3 { border-left-color: #11aa66; }
+.ann-card.ucolor-4 { border-left-color: #cc8800; }
+.ann-card.ucolor-5 { border-left-color: #cc1177; }
+.ann-card.ucolor-6 { border-left-color: #00aaaa; }
+.ann-card.ucolor-7 { border-left-color: #aa6622; }
+.ann-card.ucolor-8 { border-left-color: #5566cc; }
+.ann-card.ucolor-9 { border-left-color: #aa22aa; }
+
+.ann-user-dot.ucolor-0 { background: #cc1111; }
+.ann-user-dot.ucolor-1 { background: #7722cc; }
+.ann-user-dot.ucolor-2 { background: #1188cc; }
+.ann-user-dot.ucolor-3 { background: #11aa66; }
+.ann-user-dot.ucolor-4 { background: #cc8800; }
+.ann-user-dot.ucolor-5 { background: #cc1177; }
+.ann-user-dot.ucolor-6 { background: #00aaaa; }
+.ann-user-dot.ucolor-7 { background: #aa6622; }
+.ann-user-dot.ucolor-8 { background: #5566cc; }
+.ann-user-dot.ucolor-9 { background: #aa22aa; }
 /* Selection tooltip */
 #sel-tooltip {
   position: fixed; z-index: 200;
@@ -1346,6 +1403,10 @@ async function handleAuth() {
 }
 
 function loginUser(userData, saveSession) {
+  // Collapse TOC by default on small screens
+  if (window.innerWidth <= 600) {
+    document.getElementById('toc-panel')?.classList.add('collapsed');
+  }
   currentUser = userData;
 
   if (saveSession) {
@@ -1796,15 +1857,19 @@ function saveAnnotation(comment) {
 }
 
 function applyHighlightToDOM(ann) {
+  if (!ann.quote) return;
   if (ann.chapterIndex !== currentSpineIndex) return;
+  if (ann.bookId && ann.bookId !== activeBookId) return;
+  if (document.querySelector(`[data-ann-id="${ann.id}"]`)) return;
   const bc = document.getElementById('book-content');
-  const isMine = ann.username === currentUser?.username;
-  // Find matching text and wrap
-  wrapTextInContent(bc, ann.quote, ann.id, isMine ? 'mine' : 'other');
+  const colorIdx = getUserColorIndex(ann.username);
+  wrapTextInContent(bc, ann.quote, ann.id, 'ucolor-' + colorIdx);
 }
 
 function wrapTextInContent(root, text, id, cls) {
-  if (!text) return;
+  if (!text || !text.trim()) return;
+
+  // Strategy 1: fast path — find in a single text node
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node;
   while (node = walker.nextNode()) {
@@ -1823,7 +1888,75 @@ function wrapTextInContent(root, text, id, cls) {
     parent.insertBefore(mark, node);
     if (after) parent.insertBefore(document.createTextNode(after), node);
     parent.removeChild(node);
-    return; // wrap first occurrence only
+    return;
+  }
+
+  // Strategy 2: slow path — text is split across multiple nodes (spans, em, etc.)
+  // Use innerHTML string search as a fallback
+  try {
+    const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const allBlocks = root.querySelectorAll('p, div, li, td, h1, h2, h3, h4, h5, h6, blockquote, section');
+    for (const block of allBlocks) {
+      if (block.querySelector('.epub-highlight')) continue;
+      if (!block.textContent.includes(text)) continue;
+      // Found the block containing our text — wrap just the text inside it
+      const html = block.innerHTML;
+      const safeText = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // Try exact HTML match first
+      if (html.includes(safeText)) {
+        block.innerHTML = html.replace(
+          safeText,
+          `<mark class="epub-highlight ${cls}" data-ann-id="${id}">${safeText}</mark>`
+        );
+        block.querySelector(`[data-ann-id="${id}"]`)
+          ?.addEventListener('click', () => focusAnnotation(id));
+        return;
+      }
+      // Last resort: wrap whole block text content match
+      const mark = document.createElement('mark');
+      mark.className = 'epub-highlight ' + cls;
+      mark.dataset.annId = id;
+      mark.textContent = text;
+      mark.addEventListener('click', () => focusAnnotation(id));
+      const blockWalker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+      let accumulated = '', nodes = [], lengths = [];
+      let n;
+      while (n = blockWalker.nextNode()) {
+        nodes.push(n); lengths.push(n.textContent.length);
+        accumulated += n.textContent;
+      }
+      const startIdx = accumulated.indexOf(text);
+      if (startIdx === -1) continue;
+      const endIdx = startIdx + text.length;
+      // Find which nodes are covered
+      let pos = 0;
+      let started = false;
+      const range = document.createRange();
+      for (let i = 0; i < nodes.length; i++) {
+        const nodeStart = pos;
+        const nodeEnd   = pos + nodes[i].textContent.length;
+        if (!started && nodeEnd > startIdx) {
+          range.setStart(nodes[i], startIdx - nodeStart);
+          started = true;
+        }
+        if (started && nodeEnd >= endIdx) {
+          range.setEnd(nodes[i], endIdx - nodeStart);
+          break;
+        }
+        pos = nodeEnd;
+      }
+      try {
+        range.surroundContents(mark);
+      } catch {
+        // If surroundContents fails (crosses block elements), just insert the mark
+        const frag = range.extractContents();
+        mark.appendChild(frag);
+        range.insertNode(mark);
+      }
+      return;
+    }
+  } catch(e) {
+    console.warn('Highlight fallback failed:', e);
   }
 }
 
@@ -1838,7 +1971,6 @@ function removeHighlightFromDOM(id) {
 function renderAnnotations() {
   const list = document.getElementById('ann-list');
   const all  = LS.get('annotations') || [];
-  // Show only annotations for the currently open book
   const anns = activeBookId ? all.filter(a => a.bookId === activeBookId) : all;
   if (anns.length === 0) {
     list.innerHTML = '<div class="ann-empty"><div class="e-icon">🕷️</div><p>Highlight text to weave your thoughts into the dark…</p></div>';
@@ -1846,13 +1978,15 @@ function renderAnnotations() {
   }
   list.innerHTML = '';
   anns.slice().reverse().forEach(ann => {
-    const isMine = ann.username === currentUser?.username;
+    const isMine   = ann.username === currentUser?.username;
+    const colorIdx = getUserColorIndex(ann.username);
     const card = document.createElement('div');
-    card.className = 'ann-card' + (isMine ? '' : ' other-user');
+    card.className = `ann-card ucolor-${colorIdx}`;
     card.dataset.id = ann.id;
     card.innerHTML = `
-      <div class="ann-user ${isMine?'':'other'}">
-        <div class="dot"></div>${esc(ann.displayName || ann.username)}
+      <div class="ann-user" style="display:flex;align-items:center;gap:5px">
+        <div class="dot ucolor-${colorIdx}" style="width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0"></div>
+        <span>${esc(ann.displayName || ann.username)}${isMine ? ' <span style="opacity:.5;font-size:.7em">(you)</span>' : ''}</span>
       </div>
       ${ann.quote ? `<div class="ann-quote-text">"${esc(ann.quote.length>100?ann.quote.slice(0,100)+'…':ann.quote)}"</div>` : ''}
       ${ann.comment ? `<div class="ann-comment-text">${esc(ann.comment)}</div>` : ''}
@@ -1913,7 +2047,23 @@ function deleteAnnotation(id) {
 // PANEL TOGGLES
 // ═══════════════════════════════════════════════════════
 document.getElementById('toggle-toc')?.addEventListener('click', () => {
-  document.getElementById('toc-panel').classList.toggle('collapsed');
+  const toc = document.getElementById('toc-panel');
+  toc.classList.toggle('collapsed');
+  // On mobile, show/hide a dark backdrop behind the drawer
+  if (window.innerWidth <= 600) {
+    let overlay = document.getElementById('toc-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'toc-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:140;display:none';
+      overlay.addEventListener('click', () => {
+        toc.classList.add('collapsed');
+        overlay.style.display = 'none';
+      });
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display = toc.classList.contains('collapsed') ? 'none' : 'block';
+  }
 });
 document.getElementById('toggle-ann').addEventListener('click', () => {
   document.getElementById('ann-panel').classList.toggle('collapsed');
@@ -2005,6 +2155,23 @@ function applyTheme(theme) {
   document.querySelectorAll('.theme-opt').forEach(b => {
     b.classList.toggle('active', b.dataset.theme === theme);
   });
+}
+// ═══════════════════════════════════════════════════════
+// USER COLOR ASSIGNMENT
+// Each unique username gets a consistent color index 0-9
+// Same user always gets the same color across all sessions
+// ═══════════════════════════════════════════════════════
+const userColorMap = new Map(); // username -> color index
+let nextColorIndex = 1; // 0 is reserved for current user (always red)
+
+function getUserColorIndex(username) {
+  if (username === currentUser?.username) return 0; // always red for yourself
+  if (userColorMap.has(username)) return userColorMap.get(username);
+  // Assign next available color
+  const idx = (nextColorIndex % 9) + 1; // 1-9 for others
+  nextColorIndex++;
+  userColorMap.set(username, idx);
+  return idx;
 }
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
