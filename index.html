@@ -383,7 +383,7 @@ body.theme-light {
 
 /* ── SPINE / TOC PANEL ── */
 #toc-panel {
-  width: 220px;
+  width: 200px;
   background: linear-gradient(180deg, var(--shadow) 0%, var(--abyss) 100%);
   border-right: 1px solid rgba(139,0,0,0.2);
   display: flex;
@@ -431,7 +431,10 @@ body.theme-light {
   cursor: pointer;
   border-left: 2px solid transparent;
   transition: all .2s;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
+  line-height: 1.4;
 }
 .spine-item:hover { color: var(--parchment); border-left-color: var(--blood); background: rgba(139,0,0,0.06); }
 .spine-item.active { color: var(--parchment); border-left-color: var(--blood-bright); background: rgba(139,0,0,0.12); }
@@ -1277,21 +1280,22 @@ function showScreen(id) {
 // INIT — session stored in sessionStorage (tab only)
 // User data fetched fresh from Realtime Database on load
 // ═══════════════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', async () => {
-  const sitePassed = sessionStorage.getItem('site_pass_ok');
-  if (!sitePassed) { showScreen('sitepass'); return; }
-
-  // Check if a session token is saved in sessionStorage
+window.addEventListener('DOMContentLoaded', () => {
+  const sitePassed   = sessionStorage.getItem('site_pass_ok');
   const sessionToken = sessionStorage.getItem('session_token');
   const sessionUser  = sessionStorage.getItem('session_user');
+
+  if (!sitePassed) { showScreen('sitepass'); return; }
   if (!sessionToken || !sessionUser) { showScreen('auth'); return; }
 
+  // Restore session immediately — no Firebase wait
   try {
-    // Verify session still exists in Firebase
-    const snap = await rtdb.ref('sessions/' + sessionToken).get();
-    if (!snap.exists()) { sessionStorage.clear(); showScreen('auth'); return; }
     const userData = JSON.parse(sessionUser);
     loginUser(userData, false);
+    // Verify token in background silently
+    rtdb.ref('sessions/' + sessionToken).get()
+      .then(snap => { if (!snap.exists()) { sessionStorage.clear(); showScreen('auth'); } })
+      .catch(() => {});
   } catch(e) {
     console.error('Session restore failed:', e);
     showScreen('auth');
@@ -1308,16 +1312,17 @@ function checkSitePass() {
   const val = document.getElementById('site-pass-input').value.trim().toLowerCase();
   if (val === SITE_PASS) {
     sessionStorage.setItem('site_pass_ok', '1');
-    // Check if session exists
     const sessionToken = sessionStorage.getItem('session_token');
     const sessionUser  = sessionStorage.getItem('session_user');
     if (sessionToken && sessionUser) {
-      rtdb.ref('sessions/' + sessionToken).get()
-        .then(snap => {
-          if (snap.exists()) loginUser(JSON.parse(sessionUser), false);
-          else showScreen('auth');
-        })
-        .catch(() => showScreen('auth'));
+      // Restore session instantly, verify Firebase in background
+      try {
+        const userData = JSON.parse(sessionUser);
+        loginUser(userData, false);
+        rtdb.ref('sessions/' + sessionToken).get()
+          .then(snap => { if (!snap.exists()) { sessionStorage.clear(); showScreen('auth'); } })
+          .catch(() => {});
+      } catch(e) { showScreen('auth'); }
     } else {
       showScreen('auth');
     }
@@ -1752,12 +1757,12 @@ async function renderChapter(index) {
   doc.querySelectorAll('style').forEach(s => { const ns = document.createElement('style'); ns.textContent = scopeCSS(s.textContent); bc.appendChild(ns); });
   Array.from(body.childNodes).forEach(n => bc.appendChild(document.importNode(n, true)));
 
-  // Re-apply saved highlights — small delay lets the DOM fully render first
+  // Re-apply saved highlights — delay lets DOM fully render first
   setTimeout(() => {
     const anns = LS.get('annotations') || [];
     anns.filter(a => a.bookId === activeBookId && a.chapterIndex === currentSpineIndex)
         .forEach(a => applyHighlightToDOM(a));
-  }, 120);
+  }, 300);
 
   document.getElementById('reading-area').scrollTop = 0;
   pushReadingPosition(); // update others on which chapter you are on
@@ -1871,33 +1876,36 @@ function applyHighlightToDOM(ann) {
 function wrapTextInContent(root, text, id, cls) {
   if (!text || !text.trim()) return;
 
-  // Normalize whitespace in search text — EPUB often has extra spaces/newlines
-  const normalize = s => s.replace(/\s+/g, ' ').trim();
-  const needle = normalize(text);
+  function makeHighlight() {
+    const mark = document.createElement('mark');
+    mark.className = 'epub-highlight ' + cls;
+    mark.dataset.annId = id;
+    mark.addEventListener('click', () => focusAnnotation(id));
+    return mark;
+  }
 
-  // ── Strategy 1: single text node (fast path) ──
+  // Normalize whitespace — EPUBs often have extra spaces/newlines
+  const norm = s => s.replace(/\s+/g, ' ').trim();
+  const needle = norm(text);
+
+  // ── Strategy 1: exact match in a single text node ──
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node;
   while (node = walker.nextNode()) {
     if (node.parentElement.closest('.epub-highlight')) continue;
-    const haystack = normalize(node.textContent);
-    const idx = haystack.indexOf(needle);
+    const idx = norm(node.textContent).indexOf(needle);
     if (idx === -1) continue;
-    // Find real char positions in original text
-    let realStart = 0, normalCount = 0;
+    // Find position in original (un-normalized) text
+    let count = 0, realStart = 0;
     for (let i = 0; i < node.textContent.length; i++) {
-      if (normalCount >= idx) { realStart = i; break; }
-      if (node.textContent[i] !== ' ' || (i > 0 && node.textContent[i-1] !== ' '))
-        normalCount++;
+      if (count >= idx) { realStart = i; break; }
+      const ch = node.textContent[i];
+      if (ch !== ' ' || (i > 0 && node.textContent[i-1] !== ' ')) count++;
     }
-    const before = node.textContent.slice(0, realStart);
-    const mid    = node.textContent.slice(realStart, realStart + text.length);
-    const after  = node.textContent.slice(realStart + text.length);
-    const mark = document.createElement('mark');
-    mark.className = 'epub-highlight ' + cls;
-    mark.dataset.annId = id;
-    mark.textContent = mid || needle;
-    mark.addEventListener('click', () => focusAnnotation(id));
+    const before  = node.textContent.slice(0, realStart);
+    const matched = node.textContent.slice(realStart, realStart + needle.length) || needle;
+    const after   = node.textContent.slice(realStart + needle.length);
+    const mark = makeHighlight(); mark.textContent = matched;
     const parent = node.parentNode;
     if (before) parent.insertBefore(document.createTextNode(before), node);
     parent.insertBefore(mark, node);
@@ -1906,63 +1914,55 @@ function wrapTextInContent(root, text, id, cls) {
     return;
   }
 
-  // ── Strategy 2: text is split across inline elements (em, span, strong etc.) ──
-  // Search by scanning all block elements' full text content
+  // ── Strategy 2: text split across inline elements (em, span, strong…) ──
+  // Collect all text nodes, build a flat string + position map, then wrap
   const blocks = root.querySelectorAll('p, div, li, td, h1, h2, h3, h4, h5, h6, blockquote, section');
   for (const block of blocks) {
     if (block.querySelector('.epub-highlight')) continue;
-    if (!normalize(block.textContent).includes(needle)) continue;
+    if (!norm(block.textContent).includes(needle)) continue;
 
-    // Collect all text nodes inside this block
+    // Build flat text + map back to original nodes
     const textNodes = [];
     const tw = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
-    let tn;
-    while (tn = tw.nextNode()) textNodes.push(tn);
+    let tn; while (tn = tw.nextNode()) textNodes.push(tn);
 
-    // Build full concatenated text and map char positions back to nodes
-    let full = '';
-    const map = []; // map[charIndex] = { node, localIndex }
+    let flat = '';
+    const map = [];
     for (const tn of textNodes) {
       for (let i = 0; i < tn.textContent.length; i++) {
-        map.push({ node: tn, localIndex: i });
-        full += tn.textContent[i];
+        map.push({ node: tn, idx: i });
+        flat += tn.textContent[i];
       }
     }
 
-    const normFull = normalize(full);
-    const startNorm = normFull.indexOf(needle);
-    if (startNorm === -1) continue;
+    const normFlat  = norm(flat);
+    const normStart = normFlat.indexOf(needle);
+    if (normStart === -1) continue;
 
-    // Map normalized position back to real position
-    let realPos = 0, normPos = 0;
-    while (realPos < full.length && normPos < startNorm) {
-      const ch = full[realPos];
-      if (ch !== ' ' || (realPos > 0 && full[realPos-1] !== ' ')) normPos++;
-      realPos++;
+    // Map normalized index → real index in flat
+    let ri = 0, ni = 0;
+    while (ri < flat.length && ni < normStart) {
+      const ch = flat[ri];
+      if (ch !== ' ' || (ri > 0 && flat[ri-1] !== ' ')) ni++;
+      ri++;
     }
-    const realStart = realPos;
-    const realEnd   = realStart + needle.length;
-    if (realEnd > map.length) continue;
+    const realStart = ri;
+    const realEnd   = Math.min(realStart + needle.length, map.length);
 
-    // Group the range by node
+    // Group by node
     const nodeRanges = new Map();
-    for (let i = realStart; i < realEnd && i < map.length; i++) {
-      const { node: n, localIndex: li } = map[i];
+    for (let i = realStart; i < realEnd; i++) {
+      const { node: n, idx: li } = map[i];
       if (!nodeRanges.has(n)) nodeRanges.set(n, { start: li, end: li });
       nodeRanges.get(n).end = li + 1;
     }
 
-    // Wrap each node's portion
     for (const [n, { start, end }] of nodeRanges) {
-      const before = n.textContent.slice(0, start);
-      const mid    = n.textContent.slice(start, end);
-      const after  = n.textContent.slice(end);
-      if (!mid) continue;
-      const mark = document.createElement('mark');
-      mark.className = 'epub-highlight ' + cls;
-      mark.dataset.annId = id;
-      mark.textContent = mid;
-      mark.addEventListener('click', () => focusAnnotation(id));
+      const before  = n.textContent.slice(0, start);
+      const matched = n.textContent.slice(start, end);
+      const after   = n.textContent.slice(end);
+      if (!matched) continue;
+      const mark = makeHighlight(); mark.textContent = matched;
       const parent = n.parentNode;
       if (before) parent.insertBefore(document.createTextNode(before), n);
       parent.insertBefore(mark, n);
@@ -1972,92 +1972,23 @@ function wrapTextInContent(root, text, id, cls) {
     return;
   }
 
-  // ── Strategy 3: absolute last resort — innerHTML replacement ──
+  // ── Strategy 3: innerHTML replacement (last resort) ──
   try {
+    const escText = t => t.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
     const allBlocks = root.querySelectorAll('p, div, li, h1, h2, h3, h4');
     for (const block of allBlocks) {
       if (!block.textContent.includes(text)) continue;
-      const esc2 = text.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-      if (block.innerHTML.includes(esc2)) {
-        block.innerHTML = block.innerHTML.replace(
-          esc2,
-          `<mark class="epub-highlight ${cls}" data-ann-id="${id}">${esc2}</mark>`
-        );
-        block.querySelector(`[data-ann-id="${id}"]`)
-          ?.addEventListener('click', () => focusAnnotation(id));
-        return;
-      }
-    }
-  } catch(e) { console.warn('Highlight strategy 3 failed:', e); }
-}
-
-  // Strategy 2: slow path — text is split across multiple nodes (spans, em, etc.)
-  // Use innerHTML string search as a fallback
-  try {
-    const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const allBlocks = root.querySelectorAll('p, div, li, td, h1, h2, h3, h4, h5, h6, blockquote, section');
-    for (const block of allBlocks) {
-      if (block.querySelector('.epub-highlight')) continue;
-      if (!block.textContent.includes(text)) continue;
-      // Found the block containing our text — wrap just the text inside it
-      const html = block.innerHTML;
-      const safeText = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      // Try exact HTML match first
-      if (html.includes(safeText)) {
-        block.innerHTML = html.replace(
-          safeText,
-          `<mark class="epub-highlight ${cls}" data-ann-id="${id}">${safeText}</mark>`
-        );
-        block.querySelector(`[data-ann-id="${id}"]`)
-          ?.addEventListener('click', () => focusAnnotation(id));
-        return;
-      }
-      // Last resort: wrap whole block text content match
-      const mark = document.createElement('mark');
-      mark.className = 'epub-highlight ' + cls;
-      mark.dataset.annId = id;
-      mark.textContent = text;
-      mark.addEventListener('click', () => focusAnnotation(id));
-      const blockWalker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
-      let accumulated = '', nodes = [], lengths = [];
-      let n;
-      while (n = blockWalker.nextNode()) {
-        nodes.push(n); lengths.push(n.textContent.length);
-        accumulated += n.textContent;
-      }
-      const startIdx = accumulated.indexOf(text);
-      if (startIdx === -1) continue;
-      const endIdx = startIdx + text.length;
-      // Find which nodes are covered
-      let pos = 0;
-      let started = false;
-      const range = document.createRange();
-      for (let i = 0; i < nodes.length; i++) {
-        const nodeStart = pos;
-        const nodeEnd   = pos + nodes[i].textContent.length;
-        if (!started && nodeEnd > startIdx) {
-          range.setStart(nodes[i], startIdx - nodeStart);
-          started = true;
-        }
-        if (started && nodeEnd >= endIdx) {
-          range.setEnd(nodes[i], endIdx - nodeStart);
-          break;
-        }
-        pos = nodeEnd;
-      }
-      try {
-        range.surroundContents(mark);
-      } catch {
-        // If surroundContents fails (crosses block elements), just insert the mark
-        const frag = range.extractContents();
-        mark.appendChild(frag);
-        range.insertNode(mark);
-      }
+      const safe = escText(text);
+      if (!block.innerHTML.includes(safe)) continue;
+      block.innerHTML = block.innerHTML.replace(
+        safe,
+        `<mark class="epub-highlight ${cls}" data-ann-id="${id}">${safe}</mark>`
+      );
+      block.querySelector(`[data-ann-id="${id}"]`)
+        ?.addEventListener('click', () => focusAnnotation(id));
       return;
     }
-  } catch(e) {
-    console.warn('Highlight fallback failed:', e);
-  }
+  } catch(e) { console.warn('Highlight strategy 3 failed:', e); }
 }
 
 function removeHighlightFromDOM(id) {
