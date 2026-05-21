@@ -256,16 +256,16 @@ html, body {
 }
 #screen-app { display: none; }
 #screen-app.active { display: flex; }
-/* ── TOPBAR ── */
+/* ── TOPBAR always dark so buttons are ALWAYS visible ── */
 #topbar {
-  background: linear-gradient(90deg, var(--void) 0%, var(--shadow) 50%, var(--void) 100%);
+  background: var(--topbar-bg, var(--void));
   border-bottom: 1px solid rgba(139,0,0,0.3);
   min-height: 56px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 8px 20px;
   flex-shrink: 0;
   position: relative;
   z-index: 50;
@@ -310,32 +310,37 @@ body.theme-dim {
   --parchment: #f0d0c8; --parchment-dark: #d4a898; --bone: #d0c0b8;
   --book-bg: linear-gradient(160deg, #1e0c0c 0%, #160808 100%);
   --book-text: #dcc8b8;
+  --topbar-bg: #0a0404;
 }
 
 body.theme-parchment {
-  /* warm antique paper — sepia/brown accent */
   --void: #f4ede0; --abyss: #fdf8f0; --shadow: #e8dcc8;
   --dusk: #ddd0b8; --mist: #d0c4a8;
-  --blood: #7a4a1e; --blood-bright: #9a5e28; --blood-dim: #5a3210;
+  --blood: #7a4a1e; --blood-bright: #a05a28; --blood-dim: #5a3210;
   --gold: #8a6020; --gold-dim: #6a4818;
   --parchment: #2a1a08; --parchment-dark: #3c2a10; --bone: #4a3820;
   --silver: #6a5438; --silver-dim: #8a7458;
   --glow-blood: none; --glow-gold: none;
   --book-bg: #fffcf4;
   --book-text: #2a1a08;
+  --topbar-bg: #2a1a08;
 }
-/* make all UI surfaces readable on parchment */
-body.theme-parchment #topbar { background: #2a1a08; }
 body.theme-parchment #toc-panel { background: linear-gradient(180deg, #e8dcc8, #f4ede0); }
 body.theme-parchment #ann-panel { background: linear-gradient(180deg, #e8dcc8, #f4ede0); }
-body.theme-parchment .ann-card { background: rgba(122,74,30,0.08); }
+body.theme-parchment .ann-card { background: rgba(122,74,30,0.08); border-left-color: #7a4a1e; }
 body.theme-parchment .gothic-card { background: #f4ede0; }
 body.theme-parchment .gothic-input { background: #fffcf4; color: #2a1a08; }
 body.theme-parchment .gothic-textarea { background: #fffcf4; color: #2a1a08; }
 body.theme-parchment .screen { background: radial-gradient(ellipse at center, #ede0c8, #d4c4a8); }
+body.theme-parchment .panel-heading { color: #8a6020; border-bottom-color: rgba(122,74,30,0.2); }
+body.theme-parchment .spine-item { color: #6a5438; }
+body.theme-parchment .spine-item.active { color: #2a1a08; border-left-color: #7a4a1e; }
+body.theme-parchment .ann-time { color: #8a7458; }
+body.theme-parchment .ann-quote-text { color: #6a5438; }
+body.theme-parchment .ann-comment-text { color: #2a1a08; }
+body.theme-parchment #reading-area { background: #f4ede0; }
 
 body.theme-light {
-  /* clean off-white — teal/forest green accent, readable everywhere */
   --void: #f2f4f2; --abyss: #ffffff; --shadow: #e4ece4;
   --dusk: #d8e4d8; --mist: #ccdccc;
   --blood: #2a6640; --blood-bright: #3a8852; --blood-dim: #1a4a2c;
@@ -346,19 +351,30 @@ body.theme-light {
   --glow-gold: 0 0 10px rgba(42,102,64,0.3);
   --book-bg: #ffffff;
   --book-text: #0e2018;
+  --topbar-bg: #0e2018;
 }
-/* make all UI surfaces readable on light */
-body.theme-light #topbar { background: #0e2018; }
 body.theme-light #toc-panel { background: linear-gradient(180deg, #e4ece4, #f2f4f2); }
 body.theme-light #ann-panel { background: linear-gradient(180deg, #e4ece4, #f2f4f2); }
-body.theme-light .ann-card { background: rgba(42,102,64,0.07); }
+body.theme-light .ann-card { background: rgba(42,102,64,0.07); border-left-color: #2a6640; }
 body.theme-light .gothic-card { background: #f2f4f2; }
 body.theme-light .gothic-input { background: #ffffff; color: #0e2018; }
 body.theme-light .gothic-textarea { background: #ffffff; color: #0e2018; }
 body.theme-light .screen { background: radial-gradient(ellipse at center, #e4ece4, #ccd8cc); }
-body.theme-light .upload-epub-btn { border-color: rgba(42,102,64,0.5); }
-body.theme-light .upload-epub-btn:hover { border-color: var(--blood-bright); color: var(--blood-bright); }
-body.theme-light .theme-opt { color: var(--parchment); }
+body.theme-light .panel-heading { color: #2a6640; border-bottom-color: rgba(42,102,64,0.2); }
+body.theme-light .spine-item { color: #4a6858; }
+body.theme-light .spine-item.active { color: #0e2018; border-left-color: #2a6640; }
+body.theme-light .ann-time { color: #6a8878; }
+body.theme-light .ann-quote-text { color: #4a6858; }
+body.theme-light .ann-comment-text { color: #0e2018; }
+body.theme-light #reading-area { background: #f2f4f2; }
+
+/* Topbar text/buttons are always white regardless of theme since topbar is always dark */
+#topbar .topbar-brand,
+#topbar .upload-epub-btn,
+#topbar .user-badge,
+#topbar .gothic-btn { color: #e8dcc8 !important; }
+#topbar .upload-epub-btn { border-color: rgba(255,255,255,0.2) !important; }
+#topbar .upload-epub-btn:hover { border-color: var(--blood-bright) !important; color: var(--blood-bright) !important; background: rgba(255,255,255,0.06) !important; }
 .topbar-sep { color: rgba(139,0,0,0.4); font-size: .8rem; }
 #book-title-display {
   font-family: var(--font-prose);
@@ -1157,7 +1173,9 @@ function showSyncToast(msg) {
 }
 
 // ── ANNOTATIONS ─────────────────────────────────────────
-// Write annotation to Realtime Database (faster and more reliable than Firestore)
+// In-memory annotation store — no localStorage race conditions
+const annStore = new Map(); // id -> annotation object
+
 function broadcast(type, payload) {
   if (type === 'annotation_add') {
     rtdb.ref('annotations/' + payload.id).set(payload)
@@ -1170,51 +1188,53 @@ function broadcast(type, payload) {
 
 // Listen for annotation changes from ALL users in real time
 function startAnnotationListener() {
-  // Detach any existing listeners first — prevents duplicate listeners on re-login
+  // Detach ALL existing listeners first — critical to prevent duplicates
   rtdb.ref('annotations').off();
+  annStore.clear();
 
-  // Bulk load ALL current annotations fresh from Firebase
-  rtdb.ref('annotations').get().then(snap => {
-    const anns = [];
-    snap.forEach(child => { if (child.val()) anns.push(child.val()); });
-    LS.set('annotations', anns);
+  // Use value listener — fires once with ALL data, then again on ANY change
+  // This is simpler and more reliable than child_added
+  rtdb.ref('annotations').on('value', snap => {
+    const incoming = new Map();
+    snap.forEach(child => {
+      const ann = child.val();
+      if (ann && ann.id) incoming.set(ann.id, ann);
+    });
+
+    // Find newly added annotations (not in store before)
+    const added = [];
+    for (const [id, ann] of incoming) {
+      if (!annStore.has(id)) added.push(ann);
+    }
+
+    // Find deleted annotations (were in store, now gone)
+    const removed = [];
+    for (const [id] of annStore) {
+      if (!incoming.has(id)) removed.push(id);
+    }
+
+    // Update store
+    annStore.clear();
+    for (const [id, ann] of incoming) annStore.set(id, ann);
+
+    // Sync to localStorage for focusAnnotation lookups
+    LS.set('annotations', [...annStore.values()]);
+
+    // Re-render panel
     renderAnnotations();
-    // Apply highlights for current chapter
+
+    // Apply/remove DOM highlights for current chapter
+    removed.forEach(id => removeHighlightFromDOM(id));
     setTimeout(() => {
-      anns.filter(a => a.bookId === activeBookId && a.chapterIndex === currentSpineIndex)
-          .forEach(a => { removeHighlightFromDOM(a.id); applyHighlightToDOM(a); });
-    }, 300);
-  }).catch(e => console.warn('Annotation initial fetch failed:', e));
-
-  // Listen for NEW annotations added after we loaded
-  const loadedAt = Date.now();
-  rtdb.ref('annotations').on('child_added', snap => {
-    const ann = snap.val();
-    if (!ann) return;
-    // Skip ones that existed before we started listening (already bulk-loaded above)
-    if (ann.createdAt && ann.createdAt < loadedAt - 2000) return;
-    const anns = LS.get('annotations') || [];
-    if (anns.find(a => a.id === ann.id)) return; // already have it
-    anns.push(ann);
-    LS.set('annotations', anns);
-    renderAnnotations();
-    if (ann.bookId === activeBookId && ann.chapterIndex === currentSpineIndex) {
-      setTimeout(() => { removeHighlightFromDOM(ann.id); applyHighlightToDOM(ann); }, 150);
-    }
-    if (ann.username !== currentUser?.username) {
-      showSyncToast(`${ann.displayName || ann.username} marked a passage`);
-    }
-  });
-
-  // Listen for deletions
-  rtdb.ref('annotations').on('child_removed', snap => {
-    const ann = snap.val();
-    if (!ann) return;
-    let anns = LS.get('annotations') || [];
-    anns = anns.filter(a => a.id !== ann.id);
-    LS.set('annotations', anns);
-    removeHighlightFromDOM(ann.id);
-    renderAnnotations();
+      added.forEach(ann => {
+        if (ann.bookId === activeBookId && ann.chapterIndex === currentSpineIndex) {
+          applyHighlightToDOM(ann);
+        }
+        if (ann.username !== currentUser?.username) {
+          showSyncToast(`${ann.displayName || ann.username} marked a passage`);
+        }
+      });
+    }, 150);
   });
 }
 
