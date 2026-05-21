@@ -1113,26 +1113,43 @@ function broadcast(type, payload) {
 
 // Listen for annotation changes from ALL users in real time
 function startAnnotationListener() {
-  // child_added fires for all existing + new annotations
+  // Detach any existing listeners first — prevents duplicate listeners on re-login
+  rtdb.ref('annotations').off();
+
+  // Bulk load ALL current annotations fresh from Firebase
+  rtdb.ref('annotations').get().then(snap => {
+    const anns = [];
+    snap.forEach(child => { if (child.val()) anns.push(child.val()); });
+    LS.set('annotations', anns);
+    renderAnnotations();
+    // Apply highlights for current chapter
+    setTimeout(() => {
+      anns.filter(a => a.bookId === activeBookId && a.chapterIndex === currentSpineIndex)
+          .forEach(a => { removeHighlightFromDOM(a.id); applyHighlightToDOM(a); });
+    }, 300);
+  }).catch(e => console.warn('Annotation initial fetch failed:', e));
+
+  // Listen for NEW annotations added after we loaded
+  const loadedAt = Date.now();
   rtdb.ref('annotations').on('child_added', snap => {
     const ann = snap.val();
     if (!ann) return;
+    // Skip ones that existed before we started listening (already bulk-loaded above)
+    if (ann.createdAt && ann.createdAt < loadedAt - 2000) return;
     const anns = LS.get('annotations') || [];
-    if (!anns.find(a => a.id === ann.id)) {
-      anns.push(ann);
-      LS.set('annotations', anns);
-    }
+    if (anns.find(a => a.id === ann.id)) return; // already have it
+    anns.push(ann);
+    LS.set('annotations', anns);
     renderAnnotations();
     if (ann.bookId === activeBookId && ann.chapterIndex === currentSpineIndex) {
-      removeHighlightFromDOM(ann.id);
-      applyHighlightToDOM(ann);
+      setTimeout(() => { removeHighlightFromDOM(ann.id); applyHighlightToDOM(ann); }, 150);
     }
     if (ann.username !== currentUser?.username) {
       showSyncToast(`${ann.displayName || ann.username} marked a passage`);
     }
   });
 
-  // child_removed fires when an annotation is deleted
+  // Listen for deletions
   rtdb.ref('annotations').on('child_removed', snap => {
     const ann = snap.val();
     if (!ann) return;
@@ -1856,8 +1873,9 @@ function saveAnnotation(comment) {
     chapterIndex: currentSpineIndex,
     quote:        pendingText,
     comment,
-    ts:   new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
-    date: new Date().toLocaleDateString(),
+    ts:        new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
+    date:      new Date().toLocaleDateString(),
+    createdAt: Date.now(),
   };
 
   // ── Apply highlight using the live Range directly (most reliable) ──
@@ -2059,35 +2077,75 @@ function renderAnnotations() {
 }
 
 async function focusAnnotation(id) {
-  // Find the annotation data
   const anns = LS.get('annotations') || [];
   const ann  = anns.find(a => a.id === id);
+  if (!ann) return;
 
-  // If annotation is on a different chapter, switch to it first
-  if (ann && ann.chapterIndex !== currentSpineIndex) {
+  // Switch book if annotation belongs to a different book
+  if (ann.bookId && ann.bookId !== activeBookId) {
+    if (epubVault.has(ann.bookId)) {
+      await switchToBook(ann.bookId);
+    } else {
+      showSyncToast('Re-upload the book this annotation belongs to');
+      return;
+    }
+  }
+
+  // Switch chapter if needed
+  const needsChapterSwitch = ann.chapterIndex !== currentSpineIndex;
+  if (needsChapterSwitch) {
     await renderChapter(ann.chapterIndex);
   }
 
   document.querySelectorAll('.epub-highlight').forEach(el => el.classList.remove('selected-ann'));
   document.querySelectorAll('.ann-card').forEach(el => el.classList.remove('active'));
 
-  // Small delay to let chapter render before scrolling
+  // Highlight the card immediately
+  const card = document.querySelector(`.ann-card[data-id="${id}"]`);
+  if (card) {
+    card.classList.add('active');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  const delay = needsChapterSwitch ? 500 : 50;
   setTimeout(() => {
-    const mark = document.querySelector(`[data-ann-id="${id}"]`);
+    const readingArea = document.getElementById('reading-area');
+
+    // Try to find existing highlight mark in DOM
+    let mark = document.querySelector(`[data-ann-id="${id}"]`);
+
+    // If no mark found, try to apply highlight now
+    if (!mark && ann.quote) {
+      applyHighlightToDOM(ann);
+      mark = document.querySelector(`[data-ann-id="${id}"]`);
+    }
+
     if (mark) {
       mark.classList.add('selected-ann');
-      // Scroll the reading area, not the whole page
-      const readingArea = document.getElementById('reading-area');
-      const markTop     = mark.getBoundingClientRect().top;
-      const areaTop     = readingArea.getBoundingClientRect().top;
-      readingArea.scrollBy({ top: markTop - areaTop - 120, behavior: 'smooth' });
+      const markTop = mark.getBoundingClientRect().top;
+      const areaTop = readingArea.getBoundingClientRect().top;
+      readingArea.scrollBy({ top: markTop - areaTop - (readingArea.clientHeight / 3), behavior: 'smooth' });
+    } else if (ann.quote) {
+      // No mark in DOM at all — search raw text and scroll to it
+      const bc = document.getElementById('book-content');
+      const searchStr = ann.quote.slice(0, 40);
+      const walker = document.createTreeWalker(bc, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+        if (node.textContent.includes(searchStr)) {
+          const el = node.parentElement;
+          const elTop   = el.getBoundingClientRect().top;
+          const areaTop = readingArea.getBoundingClientRect().top;
+          readingArea.scrollBy({ top: elTop - areaTop - (readingArea.clientHeight / 3), behavior: 'smooth' });
+          // Flash the paragraph so the user can see where the annotation is
+          el.style.transition = 'background .3s';
+          el.style.background = 'rgba(160,0,0,0.28)';
+          setTimeout(() => { el.style.background = ''; el.style.transition = ''; }, 2000);
+          break;
+        }
+      }
     }
-    const card = document.querySelector(`.ann-card[data-id="${id}"]`);
-    if (card) {
-      card.classList.add('active');
-      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  }, ann?.chapterIndex !== currentSpineIndex ? 600 : 0);
+  }, delay);
 }
 
 function deleteAnnotation(id) {
