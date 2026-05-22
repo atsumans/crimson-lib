@@ -774,7 +774,7 @@ body.theme-light #reading-area { background: #f2f4f2; }
 
 
 
-/* toggle buttons */
+/* toggle buttons — always visible, float over workspace corners */
 .panel-toggle {
   position: absolute; z-index: 20;
   background: var(--shadow);
@@ -786,16 +786,8 @@ body.theme-light #reading-area { background: #f2f4f2; }
   flex-shrink: 0;
 }
 .panel-toggle:hover { border-color: var(--blood-bright); color: var(--blood-bright); }
-/* toc toggle is inline inside heading — override absolute */
-#toc-panel .panel-toggle {
-  position: static;
-  background: rgba(139,0,0,0.12);
-  border-color: rgba(139,0,0,0.35);
-  color: var(--gold);
-}
-#toc-panel .panel-toggle:hover { background: rgba(139,0,0,0.25); }
-/* ann toggle floats top-right */
-#toggle-ann { top: 10px; right: 10px; }
+#toggle-toc { top: 10px; left: 8px; z-index: 25; }
+#toggle-ann { top: 10px; right: 8px; z-index: 25; }
 
 /* ── COMMENT MODAL ── */
 #comment-modal {
@@ -1000,15 +992,13 @@ body.theme-light #reading-area { background: #f2f4f2; }
 
   <!-- workspace -->
   <div id="workspace" style="position:relative;flex:1;overflow:hidden;display:flex;min-height:0">
-    <!-- ann toggle stays floating on right -->
+    <!-- Both toggles are OUTSIDE panels so they never collapse with them -->
+    <button class="panel-toggle" id="toggle-toc" title="Toggle Chapters" style="left:8px;top:10px">☰</button>
     <button class="panel-toggle" id="toggle-ann" title="Toggle Annotations">✦</button>
 
-    <!-- toc: toggle button is INSIDE the heading -->
+    <!-- toc panel — no toggle inside, heading has left padding to clear the button -->
     <div id="toc-panel">
-      <div class="panel-heading">
-        <button class="panel-toggle" id="toggle-toc" title="Toggle Chapters" style="position:static;transform:none;margin-right:6px">☰</button>
-        Chapters
-      </div>
+      <div class="panel-heading" style="padding-left:44px">Chapters</div>
       <div class="spine-list" id="spine-list"></div>
     </div>
 
@@ -1188,94 +1178,118 @@ function broadcast(type, payload) {
 
 // Listen for annotation changes from ALL users in real time
 function startAnnotationListener() {
-  // Detach ALL existing listeners first — critical to prevent duplicates
+  // Detach ALL existing listeners first
   rtdb.ref('annotations').off();
   annStore.clear();
 
-  // Use value listener — fires once with ALL data, then again on ANY change
-  // This is simpler and more reliable than child_added
-  rtdb.ref('annotations').on('value', snap => {
-    const incoming = new Map();
+  // Step 1: load everything that already exists in one go
+  rtdb.ref('annotations').once('value').then(snap => {
     snap.forEach(child => {
       const ann = child.val();
-      if (ann && ann.id) incoming.set(ann.id, ann);
+      if (ann && ann.id) annStore.set(ann.id, ann);
     });
-
-    // Find newly added annotations (not in store before)
-    const added = [];
-    for (const [id, ann] of incoming) {
-      if (!annStore.has(id)) added.push(ann);
-    }
-
-    // Find deleted annotations (were in store, now gone)
-    const removed = [];
-    for (const [id] of annStore) {
-      if (!incoming.has(id)) removed.push(id);
-    }
-
-    // Update store
-    annStore.clear();
-    for (const [id, ann] of incoming) annStore.set(id, ann);
-
-    // Sync to localStorage for focusAnnotation lookups
     LS.set('annotations', [...annStore.values()]);
-
-    // Re-render panel
     renderAnnotations();
-
-    // Apply/remove DOM highlights for current chapter
-    removed.forEach(id => removeHighlightFromDOM(id));
+    // Apply highlights for current chapter
     setTimeout(() => {
-      added.forEach(ann => {
-        if (ann.bookId === activeBookId && ann.chapterIndex === currentSpineIndex) {
-          applyHighlightToDOM(ann);
-        }
-        if (ann.username !== currentUser?.username) {
-          showSyncToast(`${ann.displayName || ann.username} marked a passage`);
-        }
-      });
-    }, 150);
+      [...annStore.values()]
+        .filter(a => a.bookId === activeBookId && a.chapterIndex === currentSpineIndex)
+        .forEach(a => applyHighlightToDOM(a));
+    }, 300);
+  }).catch(e => console.warn('Annotation fetch failed:', e));
+
+  // Step 2: surgical listeners for changes AFTER initial load
+  // child_added fires for new ones only (not existing, since we loaded them above)
+  // We set a timestamp gate so we ignore pre-existing items
+  const connectedAt = Date.now();
+
+  rtdb.ref('annotations').on('child_added', snap => {
+    const ann = snap.val();
+    if (!ann || !ann.id) return;
+    if (annStore.has(ann.id)) return; // already loaded in initial fetch
+    // Only show toast for annotations made after we connected
+    const isNew = !ann.createdAt || ann.createdAt > connectedAt - 5000;
+    annStore.set(ann.id, ann);
+    LS.set('annotations', [...annStore.values()]);
+    renderAnnotations();
+    if (ann.bookId === activeBookId && ann.chapterIndex === currentSpineIndex) {
+      setTimeout(() => applyHighlightToDOM(ann), 150);
+    }
+    if (isNew && ann.username !== currentUser?.username) {
+      showSyncToast(`${ann.displayName || ann.username} marked a passage`);
+    }
+  });
+
+  rtdb.ref('annotations').on('child_changed', snap => {
+    const ann = snap.val();
+    if (!ann || !ann.id) return;
+    annStore.set(ann.id, ann);
+    LS.set('annotations', [...annStore.values()]);
+    renderAnnotations();
+  });
+
+  rtdb.ref('annotations').on('child_removed', snap => {
+    const ann = snap.val();
+    if (!ann || !ann.id) return;
+    annStore.delete(ann.id);
+    LS.set('annotations', [...annStore.values()]);
+    removeHighlightFromDOM(ann.id);
+    renderAnnotations();
   });
 }
 
 // ── LIBRARY SYNC ─────────────────────────────────────────
-// Syncs the list of book metadata (title, addedAt, chapterProgress)
-// so all users see the same library shelf.
-// Note: actual EPUB binary is NOT stored — users re-upload their own copy.
+// Entire library stored in RTDB at /library — syncs instantly across all users
+// When one person adds or removes a book, everyone sees it immediately
 function startLibraryListener() {
   if (libUnsubscribe) libUnsubscribe();
-  libUnsubscribe = db.collection('library')
-    .onSnapshot(snapshot => {
-      const library = [];
-      snapshot.forEach(doc => library.push(doc.data()));
-      LS.set('library', library);
-      renderLibrary();
-      renderLibraryDropdown();
-    }, err => console.error('Library listener error:', err));
+
+  // Use RTDB for library (reliable, real-time) instead of Firestore
+  rtdb.ref('library').off();
+  rtdb.ref('library').on('value', snap => {
+    const library = [];
+    snap.forEach(child => {
+      const book = child.val();
+      if (book && book.id) library.push(book);
+    });
+    LS.set('library', library);
+    renderLibrary();
+    renderLibraryDropdown();
+  });
 
   // Listen for EPUB files shared by any user
-  // off() first to avoid duplicate listeners on re-login
   rtdb.ref('epub_files').off();
   rtdb.ref('epub_files').on('child_added', async snap => {
     const bookId  = snap.key;
     const payload = snap.val();
     if (!payload) return;
-    if (epubVault.has(bookId)) return; // already loaded
+    if (epubVault.has(bookId)) return;
     showSyncToast(`"${payload.title}" is available — loading…`);
     await loadEpubFromBase64(bookId, payload.title, payload.data);
   });
+
+  // libUnsubscribe now detaches the RTDB library listener
+  libUnsubscribe = () => {
+    rtdb.ref('library').off();
+    rtdb.ref('epub_files').off();
+  };
 }
 
 function pushLibraryBook(bookMeta) {
+  // Write to RTDB (primary) and Firestore (backup)
+  rtdb.ref('library/' + bookMeta.id).set(bookMeta)
+    .catch(e => console.error('RTDB library write failed:', e));
   db.collection('library').doc(bookMeta.id).set(bookMeta)
-    .catch(e => console.error('Library write failed:', e));
+    .catch(() => {}); // silent fallback
 }
 
 function removeLibraryBook(bookId) {
-  db.collection('library').doc(bookId).delete()
-    .catch(e => console.error('Library delete failed:', e));
+  rtdb.ref('library/' + bookId).remove()
+    .catch(e => console.error('RTDB library remove failed:', e));
   rtdb.ref('epub_files/' + bookId).remove()
     .catch(e => console.error('RTDB epub remove failed:', e));
+  db.collection('library').doc(bookId).delete()
+    .catch(() => {}); // silent fallback
 }
 
 // ── PRESENCE & CHAPTER POSITION ─────────────────────────
