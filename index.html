@@ -314,32 +314,35 @@ body.theme-dim {
 }
 
 body.theme-parchment {
-  /* Dusty Rose — warm blush with deep wine accents */
-  --void: #f2eaec; --abyss: #fdf6f7; --shadow: #e8d8dc;
-  --dusk: #dcc8cc; --mist: #ceb8bc;
-  --blood: #8b2a3a; --blood-bright: #aa3348; --blood-dim: #5c1422;
-  --gold: #8b3a2a; --gold-dim: #6a2a1e;
-  --parchment: #2a0a10; --parchment-dark: #3c1420; --bone: #4a2028;
-  --silver: #7a4858; --silver-dim: #9a6878;
+  /* Soft Linen — warm cream with terracotta accents, readable everywhere */
+  --void: #f7f0e8; --abyss: #fffdf8; --shadow: #ede4d8;
+  --dusk: #e0d4c4; --mist: #d4c8b4;
+  --blood: #c4622a; --blood-bright: #d4743a; --blood-dim: #9a4418;
+  --gold: #b05a20; --gold-dim: #8a4418;
+  --parchment: #2a1800; --parchment-dark: #3c2408; --bone: #4a3010;
+  --silver: #7a6040; --silver-dim: #9a8060;
   --glow-blood: none; --glow-gold: none;
-  --book-bg: #fdf6f7;
-  --book-text: #2a0a10;
-  --topbar-bg: #2a0a10;
+  --book-bg: #fffdf8;
+  --book-text: #2a1800;
+  --topbar-bg: #2a1800;
 }
-body.theme-parchment #toc-panel  { background: linear-gradient(180deg, #e8d8dc, #f2eaec); }
-body.theme-parchment #ann-panel  { background: linear-gradient(180deg, #e8d8dc, #f2eaec); }
-body.theme-parchment #reading-area { background: #ece4e6; }
-body.theme-parchment .ann-card   { background: rgba(139,42,58,0.07); border-left-color: #8b2a3a; }
-body.theme-parchment .gothic-card { background: #f2eaec; }
-body.theme-parchment .gothic-input { background: #fdf6f7; color: #2a0a10; }
-body.theme-parchment .gothic-textarea { background: #fdf6f7; color: #2a0a10; }
-body.theme-parchment .screen     { background: radial-gradient(ellipse at center, #e8d8dc, #d4c0c4); }
-body.theme-parchment .panel-heading { color: #8b2a3a; border-bottom-color: rgba(139,42,58,0.2); }
-body.theme-parchment .spine-item { color: #7a4858; }
-body.theme-parchment .spine-item.active { color: #2a0a10; border-left-color: #8b2a3a; }
-body.theme-parchment .ann-time   { color: #9a6878; }
-body.theme-parchment .ann-quote-text { color: #7a4858; }
-body.theme-parchment .ann-comment-text { color: #2a0a10; }
+body.theme-parchment #toc-panel   { background: linear-gradient(180deg, #ede4d8, #f7f0e8); }
+body.theme-parchment #ann-panel   { background: linear-gradient(180deg, #ede4d8, #f7f0e8); }
+body.theme-parchment #reading-area { background: #f0e8dc; }
+body.theme-parchment .ann-card    { background: rgba(196,98,42,0.07); border-left-color: #c4622a; }
+body.theme-parchment .gothic-card { background: #f7f0e8; }
+body.theme-parchment .gothic-input { background: #fffdf8; color: #2a1800; border-color: rgba(196,98,42,0.3); }
+body.theme-parchment .gothic-textarea { background: #fffdf8; color: #2a1800; border-color: rgba(196,98,42,0.3); }
+body.theme-parchment .screen      { background: radial-gradient(ellipse at center, #ede4d8, #d8ccbc); }
+body.theme-parchment .panel-heading { color: #b05a20; border-bottom-color: rgba(196,98,42,0.2); }
+body.theme-parchment .spine-item  { color: #7a6040; }
+body.theme-parchment .spine-item.active { color: #2a1800; border-left-color: #c4622a; background: rgba(196,98,42,0.08); }
+body.theme-parchment .ann-time    { color: #9a8060; }
+body.theme-parchment .ann-quote-text { color: #7a6040; }
+body.theme-parchment .ann-comment-text { color: #2a1800; }
+body.theme-parchment .gothic-btn  { background: linear-gradient(135deg, #9a4418, #c4622a); border-color: #d4743a; }
+body.theme-parchment .upload-epub-btn { border-color: rgba(212,116,58,0.6); color: #f0d8c0; }
+body.theme-parchment .upload-epub-btn:hover { border-color: #d4743a; color: #ffe0c0; background: rgba(196,98,42,0.15); }
 
 body.theme-light {
   --void: #f2f4f2; --abyss: #ffffff; --shadow: #e4ece4;
@@ -977,7 +980,7 @@ body.theme-light #reading-area { background: #f2f4f2; }
         <div style="display:flex;flex-direction:column;gap:8px" id="theme-options">
           <button class="theme-opt active" data-theme="dark">🌑 Void Dark</button>
           <button class="theme-opt" data-theme="dim">🩸 Dim Crimson</button>
-          <button class="theme-opt" data-theme="parchment">📜 Dusty Rose Parchment</button>
+          <button class="theme-opt" data-theme="parchment">🪶 Soft Linen</button>
           <button class="theme-opt" data-theme="light">🌿 Forest Light</button>
         </div>
       </div>
@@ -1536,29 +1539,11 @@ function loginUser(userData, saveSession) {
   document.getElementById('topbar-username').textContent = userData.displayName || userData.username;
   showScreen('app');
 
-  // Pull annotations from Firestore (silently, don't block login)
-  if (db) {
-    db.collection('annotations').get()
-      .then(snap => {
-        const anns = [];
-        snap.forEach(doc => anns.push(doc.data()));
-        LS.set('annotations', anns);
-        renderAnnotations();
-      }).catch(() => renderAnnotations());
+  // Do NOT fetch annotations from Firestore here —
+  // startAnnotationListener (called in startPresence) handles that via RTDB.
+  // Fetching from Firestore here overwrites RTDB data a few seconds later, wiping all annotations.
 
-    db.collection('library').get()
-      .then(snap => {
-        const lib = [];
-        snap.forEach(doc => lib.push(doc.data()));
-        LS.set('library', lib);
-        renderLibrary();
-      }).catch(() => renderLibrary());
-  } else {
-    renderAnnotations();
-    renderLibrary();
-  }
-
-  startPresence();
+  startPresence(); // this calls startAnnotationListener + startLibraryListener
 }
 
 document.getElementById('logout-btn').addEventListener('click', () => {
