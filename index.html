@@ -314,31 +314,32 @@ body.theme-dim {
 }
 
 body.theme-parchment {
-  --void: #f4ede0; --abyss: #fdf8f0; --shadow: #e8dcc8;
-  --dusk: #ddd0b8; --mist: #d0c4a8;
-  --blood: #7a4a1e; --blood-bright: #a05a28; --blood-dim: #5a3210;
-  --gold: #8a6020; --gold-dim: #6a4818;
-  --parchment: #2a1a08; --parchment-dark: #3c2a10; --bone: #4a3820;
-  --silver: #6a5438; --silver-dim: #8a7458;
+  /* Dusty Rose — warm blush with deep wine accents */
+  --void: #f2eaec; --abyss: #fdf6f7; --shadow: #e8d8dc;
+  --dusk: #dcc8cc; --mist: #ceb8bc;
+  --blood: #8b2a3a; --blood-bright: #aa3348; --blood-dim: #5c1422;
+  --gold: #8b3a2a; --gold-dim: #6a2a1e;
+  --parchment: #2a0a10; --parchment-dark: #3c1420; --bone: #4a2028;
+  --silver: #7a4858; --silver-dim: #9a6878;
   --glow-blood: none; --glow-gold: none;
-  --book-bg: #fffcf4;
-  --book-text: #2a1a08;
-  --topbar-bg: #2a1a08;
+  --book-bg: #fdf6f7;
+  --book-text: #2a0a10;
+  --topbar-bg: #2a0a10;
 }
-body.theme-parchment #toc-panel { background: linear-gradient(180deg, #e8dcc8, #f4ede0); }
-body.theme-parchment #ann-panel { background: linear-gradient(180deg, #e8dcc8, #f4ede0); }
-body.theme-parchment .ann-card { background: rgba(122,74,30,0.08); border-left-color: #7a4a1e; }
-body.theme-parchment .gothic-card { background: #f4ede0; }
-body.theme-parchment .gothic-input { background: #fffcf4; color: #2a1a08; }
-body.theme-parchment .gothic-textarea { background: #fffcf4; color: #2a1a08; }
-body.theme-parchment .screen { background: radial-gradient(ellipse at center, #ede0c8, #d4c4a8); }
-body.theme-parchment .panel-heading { color: #8a6020; border-bottom-color: rgba(122,74,30,0.2); }
-body.theme-parchment .spine-item { color: #6a5438; }
-body.theme-parchment .spine-item.active { color: #2a1a08; border-left-color: #7a4a1e; }
-body.theme-parchment .ann-time { color: #8a7458; }
-body.theme-parchment .ann-quote-text { color: #6a5438; }
-body.theme-parchment .ann-comment-text { color: #2a1a08; }
-body.theme-parchment #reading-area { background: #f4ede0; }
+body.theme-parchment #toc-panel  { background: linear-gradient(180deg, #e8d8dc, #f2eaec); }
+body.theme-parchment #ann-panel  { background: linear-gradient(180deg, #e8d8dc, #f2eaec); }
+body.theme-parchment #reading-area { background: #ece4e6; }
+body.theme-parchment .ann-card   { background: rgba(139,42,58,0.07); border-left-color: #8b2a3a; }
+body.theme-parchment .gothic-card { background: #f2eaec; }
+body.theme-parchment .gothic-input { background: #fdf6f7; color: #2a0a10; }
+body.theme-parchment .gothic-textarea { background: #fdf6f7; color: #2a0a10; }
+body.theme-parchment .screen     { background: radial-gradient(ellipse at center, #e8d8dc, #d4c0c4); }
+body.theme-parchment .panel-heading { color: #8b2a3a; border-bottom-color: rgba(139,42,58,0.2); }
+body.theme-parchment .spine-item { color: #7a4858; }
+body.theme-parchment .spine-item.active { color: #2a0a10; border-left-color: #8b2a3a; }
+body.theme-parchment .ann-time   { color: #9a6878; }
+body.theme-parchment .ann-quote-text { color: #7a4858; }
+body.theme-parchment .ann-comment-text { color: #2a0a10; }
 
 body.theme-light {
   --void: #f2f4f2; --abyss: #ffffff; --shadow: #e4ece4;
@@ -976,7 +977,7 @@ body.theme-light #reading-area { background: #f2f4f2; }
         <div style="display:flex;flex-direction:column;gap:8px" id="theme-options">
           <button class="theme-opt active" data-theme="dark">🌑 Void Dark</button>
           <button class="theme-opt" data-theme="dim">🩸 Dim Crimson</button>
-          <button class="theme-opt" data-theme="parchment">📜 Antique Parchment</button>
+          <button class="theme-opt" data-theme="parchment">📜 Dusty Rose Parchment</button>
           <button class="theme-opt" data-theme="light">🌿 Forest Light</button>
         </div>
       </div>
@@ -1178,11 +1179,10 @@ function broadcast(type, payload) {
 
 // Listen for annotation changes from ALL users in real time
 function startAnnotationListener() {
-  // Detach ALL existing listeners first
   rtdb.ref('annotations').off();
   annStore.clear();
 
-  // Step 1: load everything that already exists in one go
+  // Load all existing annotations once, atomically
   rtdb.ref('annotations').once('value').then(snap => {
     snap.forEach(child => {
       const ann = child.val();
@@ -1190,7 +1190,6 @@ function startAnnotationListener() {
     });
     LS.set('annotations', [...annStore.values()]);
     renderAnnotations();
-    // Apply highlights for current chapter
     setTimeout(() => {
       [...annStore.values()]
         .filter(a => a.bookId === activeBookId && a.chapterIndex === currentSpineIndex)
@@ -1198,24 +1197,20 @@ function startAnnotationListener() {
     }, 300);
   }).catch(e => console.warn('Annotation fetch failed:', e));
 
-  // Step 2: surgical listeners for changes AFTER initial load
-  // child_added fires for new ones only (not existing, since we loaded them above)
-  // We set a timestamp gate so we ignore pre-existing items
   const connectedAt = Date.now();
 
+  // Only listen for NEW additions after initial load
   rtdb.ref('annotations').on('child_added', snap => {
     const ann = snap.val();
     if (!ann || !ann.id) return;
-    if (annStore.has(ann.id)) return; // already loaded in initial fetch
-    // Only show toast for annotations made after we connected
-    const isNew = !ann.createdAt || ann.createdAt > connectedAt - 5000;
+    if (annStore.has(ann.id)) return; // skip pre-existing ones
     annStore.set(ann.id, ann);
     LS.set('annotations', [...annStore.values()]);
     renderAnnotations();
     if (ann.bookId === activeBookId && ann.chapterIndex === currentSpineIndex) {
       setTimeout(() => applyHighlightToDOM(ann), 150);
     }
-    if (isNew && ann.username !== currentUser?.username) {
+    if ((!ann.createdAt || ann.createdAt > connectedAt - 5000) && ann.username !== currentUser?.username) {
       showSyncToast(`${ann.displayName || ann.username} marked a passage`);
     }
   });
