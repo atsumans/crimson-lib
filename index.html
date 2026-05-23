@@ -485,9 +485,15 @@ body.theme-vampire-cyberpunk .ann-card { background: rgba(255,39,87,0.15); borde
 body.theme-vampire-cyberpunk .gothic-input { background: #111b2a; color: #ffd8f0; border-color: rgba(255,39,87,0.5); }
 body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd8f0; border-color: rgba(255,39,87,0.5); }
 
-#book-content mark:not(.epub-highlight) { 
+/* Remove EPUB's own mark tags - keep only annotation highlights */
+#book-content mark { 
   background: transparent !important; 
   border: none !important;
+  color: inherit !important;
+}
+#book-content mark.epub-highlight { 
+  background: rgba(160,0,0,0.38) !important;
+  border-bottom: 2.5px solid #cc1111 !important;
   color: inherit !important;
 }
 
