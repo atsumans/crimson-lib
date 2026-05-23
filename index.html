@@ -303,8 +303,6 @@ html, body {
 .theme-opt.active { background: var(--blood-dim); border-color: var(--blood-bright); color: #fff; }
 
 /* ── THEMES ── */
-
-/* Dark default — keeps existing Void Dark */
 body.theme-dim {
   --void: #150808; --abyss: #1e0c0c; --shadow: #2a0e0e;
   --blood-bright: #e05555; --blood: #aa1111; --blood-dim: #7a0000;
@@ -315,8 +313,8 @@ body.theme-dim {
   --topbar-bg: #0a0404;
 }
 
-/* Soft Linen parchment */
 body.theme-parchment {
+  /* Soft Linen — warm cream with terracotta accents, readable everywhere */
   --void: #f7f0e8; --abyss: #fffdf8; --shadow: #ede4d8;
   --dusk: #e0d4c4; --mist: #d4c8b4;
   --blood: #c4622a; --blood-bright: #d4743a; --blood-dim: #9a4418;
@@ -346,7 +344,6 @@ body.theme-parchment .gothic-btn  { background: linear-gradient(135deg, #9a4418,
 body.theme-parchment .upload-epub-btn { border-color: rgba(212,116,58,0.6); color: #f0d8c0; }
 body.theme-parchment .upload-epub-btn:hover { border-color: #d4743a; color: #ffe0c0; background: rgba(196,98,42,0.15); }
 
-/* Light forest green */
 body.theme-light {
   --void: #f2f4f2; --abyss: #ffffff; --shadow: #e4ece4;
   --dusk: #d8e4d8; --mist: #ccdccc;
@@ -373,125 +370,7 @@ body.theme-light .spine-item.active { color: #0e2018; border-left-color: #2a6640
 body.theme-light .ann-time { color: #6a8878; }
 body.theme-light .ann-quote-text { color: #4a6858; }
 body.theme-light .ann-comment-text { color: #0e2018; }
-
-/* NEW THEMES */
-
-/* Crypt Noir */
-body.theme-crypt-noir {
-  --void: #0B0C10; --abyss: #1C1A1F; --shadow: #2E232A;
-  --blood: #5B1B2B; --blood-bright: #8b2a3a; --blood-dim: #3a0f1a;
-  --gold: #B9A6A0; --gold-dim: #9a8680;
-  --parchment: #E5DDE3; --parchment-dark: #D5CDD3; --bone: #C5BDC3;
-  --silver: #8a7a80; --silver-dim: #6a6a70;
-  --book-bg: linear-gradient(160deg, #1C1A1F 0%, #0B0C10 100%);
-  --book-text: #E5DDE3;
-  --topbar-bg: #0B0C10;
-}
-body.theme-crypt-noir #toc-panel { background: linear-gradient(180deg, #2E232A, #1C1A1F); }
-body.theme-crypt-noir #ann-panel { background: linear-gradient(180deg, #2E232A, #1C1A1F); }
-body.theme-crypt-noir .ann-card { background: rgba(91,27,43,0.15); border-left-color: #5B1B2B; }
-
-/* Dusky Plum Smoke */
-body.theme-dusky-plum {
-  --void: #1C0E18; --abyss: #3B1930; --shadow: #6A2B55;
-  --blood: #6A2B55; --blood-bright: #8F7A86; --blood-dim: #4a1535;
-  --gold: #E5DDE3; --gold-dim: #D5CDD3;
-  --parchment: #E5DDE3; --parchment-dark: #C5ADB5; --bone: #A58A92;
-  --silver: #8F7A86; --silver-dim: #6a5a66;
-  --book-bg: linear-gradient(160deg, #3B1930 0%, #1C0E18 100%);
-  --book-text: #E5DDE3;
-  --topbar-bg: #1C0E18;
-}
-body.theme-dusky-plum #toc-panel { background: linear-gradient(180deg, #6A2B55, #3B1930); }
-body.theme-dusky-plum #ann-panel { background: linear-gradient(180deg, #6A2B55, #3B1930); }
-body.theme-dusky-plum .ann-card { background: rgba(106,43,85,0.15); border-left-color: #6A2B55; }
-
-/* Silver Stake */
-body.theme-silver-stake {
-  --void: #0F0F12; --abyss: #2B2D33; --shadow: #6B6E76;
-  --blood: #7A1A2A; --blood-bright: #aa2a3a; --blood-dim: #5a0a1a;
-  --gold: #BFC5CC; --gold-dim: #9FA5AC;
-  --parchment: #BFC5CC; --parchment-dark: #9FA5AC; --bone: #7A8088;
-  --silver: #BFC5CC; --silver-dim: #8a9098;
-  --book-bg: linear-gradient(160deg, #2B2D33 0%, #0F0F12 100%);
-  --book-text: #BFC5CC;
-  --topbar-bg: #0F0F12;
-}
-body.theme-silver-stake #toc-panel { background: linear-gradient(180deg, #6B6E76, #2B2D33); }
-body.theme-silver-stake #ann-panel { background: linear-gradient(180deg, #6B6E76, #2B2D33); }
-body.theme-silver-stake .ann-card { background: rgba(122,26,42,0.15); border-left-color: #7A1A2A; }
-
-/* Raven Feather */
-body.theme-raven-feather {
-  --void: #070709; --abyss: #15151A; --shadow: #2B2C33;
-  --blood: #4B1B2A; --blood-bright: #7a2a3a; --blood-dim: #2b0a1a;
-  --gold: #C9B9B3; --gold-dim: #a99993;
-  --parchment: #C9B9B3; --parchment-dark: #a99993; --bone: #897a74;
-  --silver: #7a7a80; --silver-dim: #5a6a70;
-  --book-bg: linear-gradient(160deg, #15151A 0%, #070709 100%);
-  --book-text: #C9B9B3;
-  --topbar-bg: #070709;
-}
-body.theme-raven-feather #toc-panel { background: linear-gradient(180deg, #2B2C33, #15151A); }
-body.theme-raven-feather #ann-panel { background: linear-gradient(180deg, #2B2C33, #15151A); }
-body.theme-raven-feather .ann-card { background: rgba(75,27,42,0.15); border-left-color: #4B1B2A; }
-
-/* Pale Fang */
-body.theme-pale-fang {
-  --void: #12090C; --abyss: #3A1A22; --shadow: #6B2A37;
-  --blood: #6B2A37; --blood-bright: #9a3a4a; --blood-dim: #4a0a17;
-  --gold: #D9C8C3; --gold-dim: #B9A8A3;
-  --parchment: #FFF8F6; --parchment-dark: #D9C8C3; --bone: #B9A8A3;
-  --silver: #9a8a85; --silver-dim: #7a7a75;
-  --book-bg: #FFF8F6;
-  --book-text: #12090C;
-  --topbar-bg: #12090C;
-}
-body.theme-pale-fang #toc-panel { background: linear-gradient(180deg, #6B2A37, #3A1A22); }
-body.theme-pale-fang #ann-panel { background: linear-gradient(180deg, #6B2A37, #3A1A22); }
-body.theme-pale-fang .ann-card { background: rgba(107,42,55,0.15); border-left-color: #6B2A37; }
-body.theme-pale-fang .gothic-input { background: #FFF8F6; color: #12090C; }
-body.theme-pale-fang .gothic-textarea { background: #FFF8F6; color: #12090C; }
-
-/* Gothic Botanical */
-body.theme-gothic-botanical {
-  --void: #0F0E10; --abyss: #2A1C23; --shadow: #4D2F3B;
-  --blood: #2F4A3B; --blood-bright: #4a6a55; --blood-dim: #1a2a1b;
-  --gold: #E6DAD1; --gold-dim: #C6BAB1;
-  --parchment: #E6DAD1; --parchment-dark: #C6BAB1; --bone: #A69a91;
-  --silver: #8a7a75; --silver-dim: #6a6a65;
-  --book-bg: linear-gradient(160deg, #2A1C23 0%, #0F0E10 100%);
-  --book-text: #E6DAD1;
-  --topbar-bg: #0F0E10;
-}
-body.theme-gothic-botanical #toc-panel { background: linear-gradient(180deg, #4D2F3B, #2A1C23); }
-body.theme-gothic-botanical #ann-panel { background: linear-gradient(180deg, #4D2F3B, #2A1C23); }
-body.theme-gothic-botanical .ann-card { background: rgba(47,74,59,0.15); border-left-color: #2F4A3B; }
-
-/* Vampire Cyberpunk */
-body.theme-vampire-cyberpunk {
-  --void: #040508; --abyss: #111b2a; --shadow: #1f3b5a;
-  --blood: #ff2757; --blood-bright: #ff5577; --blood-dim: #cc0040;
-  --gold: #ffd8f0; --gold-dim: #ffb0d0;
-  --parchment: #ffd8f0; --parchment-dark: #ffb0d0; --bone: #ff88c8;
-  --silver: #88a8cc; --silver-dim: #6688aa;
-  --book-bg: linear-gradient(160deg, #111b2a 0%, #040508 100%);
-  --book-text: #ffd8f0;
-  --topbar-bg: #040508;
-}
-body.theme-vampire-cyberpunk #toc-panel { background: linear-gradient(180deg, #1f3b5a, #111b2a); }
-body.theme-vampire-cyberpunk #ann-panel { background: linear-gradient(180deg, #1f3b5a, #111b2a); }
-body.theme-vampire-cyberpunk .ann-card { background: rgba(255,39,87,0.15); border-left-color: #ff2757; }
-body.theme-vampire-cyberpunk .gothic-input { background: #111b2a; color: #ffd8f0; border-color: rgba(255,39,87,0.5); }
-body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd8f0; border-color: rgba(255,39,87,0.5); }
-
-/* Force topbar buttons always visible on all themes */
-#topbar .topbar-brand,
-#topbar .upload-epub-btn,
-#topbar .user-badge,
-#topbar .gothic-btn { color: #e8dcc8 !important; }
-#topbar .upload-epub-btn { border-color: rgba(255,255,255,0.2) !important; }
-#topbar .upload-epub-btn:hover { border-color: var(--blood-bright) !important; color: var(--blood-bright) !important; background: rgba(255,255,255,0.06) !important; }
+body.theme-light #reading-area { background: #f2f4f2; }
 
 /* Topbar text/buttons are always white regardless of theme since topbar is always dark */
 #topbar .topbar-brand,
@@ -1103,13 +982,6 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
           <button class="theme-opt" data-theme="dim">🩸 Dim Crimson</button>
           <button class="theme-opt" data-theme="parchment">🪶 Soft Linen</button>
           <button class="theme-opt" data-theme="light">🌿 Forest Light</button>
-          <button class="theme-opt" data-theme="crypt-noir">🪦 Crypt Noir</button>
-          <button class="theme-opt" data-theme="dusky-plum">💜 Dusky Plum Smoke</button>
-          <button class="theme-opt" data-theme="silver-stake">🗡️ Silver Stake</button>
-          <button class="theme-opt" data-theme="raven-feather">🐦 Raven Feather</button>
-          <button class="theme-opt" data-theme="pale-fang">🦇 Pale Fang</button>
-          <button class="theme-opt" data-theme="gothic-botanical">🌿 Gothic Botanical</button>
-          <button class="theme-opt" data-theme="vampire-cyberpunk">⚡ Vampire Cyberpunk</button>
         </div>
       </div>
     </div>
@@ -2256,9 +2128,7 @@ function removeHighlightFromDOM(id) {
 function renderAnnotations() {
   const list = document.getElementById('ann-list');
   const all  = LS.get('annotations') || [];
-  // FILTER: Only show annotations for the currently open book
   const anns = activeBookId ? all.filter(a => a.bookId === activeBookId) : all;
-  
   if (anns.length === 0) {
     list.innerHTML = '<div class="ann-empty"><div class="e-icon">🕷️</div><p>Highlight text to weave your thoughts into the dark…</p></div>';
     return;
@@ -2498,7 +2368,7 @@ document.getElementById('theme-options').addEventListener('click', e => {
   applyTheme(btn.dataset.theme);
   sessionStorage.setItem('theme', btn.dataset.theme);
 });
-const THEMES = ['dark','dim','parchment','light','crypt-noir','dusky-plum','silver-stake','raven-feather','pale-fang','gothic-botanical','vampire-cyberpunk'];
+
 function applyTheme(theme) {
   THEMES.forEach(t => document.body.classList.remove('theme-' + t));
   if (theme !== 'dark') document.body.classList.add('theme-' + theme);
