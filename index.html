@@ -485,6 +485,13 @@ body.theme-vampire-cyberpunk .ann-card { background: rgba(255,39,87,0.15); borde
 body.theme-vampire-cyberpunk .gothic-input { background: #111b2a; color: #ffd8f0; border-color: rgba(255,39,87,0.5); }
 body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd8f0; border-color: rgba(255,39,87,0.5); }
 
+/* Remove EPUB's mark tag styling - keep only annotations */
+#book-content mark { 
+  background: transparent !important; 
+  border: none !important;
+  color: inherit !important;
+}
+
 /* Force topbar buttons always visible on all themes */
 #topbar .topbar-brand,
 #topbar .upload-epub-btn,
