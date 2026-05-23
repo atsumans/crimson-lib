@@ -1819,7 +1819,16 @@ async function renderChapter(index) {
     const cssFile = epubData.zip.file(fullPath);
     if (cssFile) {
       const style = doc.createElement('style');
-      style.textContent = scopeCSS(await cssFile.async('string'));
+      let scopedCSS = scopeCSS(await cssFile.async('string'));
+      // Preserve default formatting even if EPUB CSS resets them
+      scopedCSS += `
+        #book-content em, #book-content i { font-style: italic !important; }
+        #book-content strong, #book-content b { font-weight: bold !important; }
+        #book-content u { text-decoration: underline !important; }
+        #book-content code { font-family: monospace !important; }
+        #book-content mark { background-color: yellow !important; color: black; }
+      `;
+      style.textContent = scopedCSS;
       link.replaceWith(style);
     }
   });
