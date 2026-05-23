@@ -2096,14 +2096,14 @@ function saveAnnotation(comment) {
     chapterIndex: currentSpineIndex,
     quote:        pendingText,
     comment,
-    ts:        new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
-    date:      new Date().toLocaleDateString(),
+    ts:   new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
+    date: new Date().toLocaleDateString(),
     createdAt: Date.now(),
   };
 
-  // ── Apply highlight using the live Range directly (most reliable) ──
+  // Apply highlight using the live Range directly
   try {
-    const colorIdx = getUserColorIndex(ann.username);
+    const colorIdx = getUserColorIndex(ann.username);  // ← THIS LINE
     const cls = 'ucolor-' + colorIdx;
     const mark = document.createElement('mark');
     mark.className = 'epub-highlight ' + cls;
@@ -2112,13 +2112,11 @@ function saveAnnotation(comment) {
     try {
       pendingRange.surroundContents(mark);
     } catch {
-      // Selection spans multiple elements — extract and rewrap
       const frag = pendingRange.extractContents();
       mark.appendChild(frag);
       pendingRange.insertNode(mark);
     }
   } catch(e) {
-    // Range is gone (modal cleared it) — fall back to text search
     console.warn('Live range highlight failed, falling back to text search:', e.message);
     applyHighlightToDOM(ann);
   }
@@ -2522,16 +2520,21 @@ function applyTheme(theme) {
 // Each unique username gets a consistent color index 0-9
 // Same user always gets the same color across all sessions
 // ═══════════════════════════════════════════════════════
-const userColorMap = new Map(); // username -> color index
-let nextColorIndex = 1; // 0 is reserved for current user (always red)
+const userColorMap = new Map();
+let nextColorIndex = 1;
 
 function getUserColorIndex(username) {
-  if (username === currentUser?.username) return 0; // always red for yourself
+  // Current user is always color 0 (red)
+  if (username === currentUser?.username) return 0;
+  
+  // Check if this user already has a color assigned
   if (userColorMap.has(username)) return userColorMap.get(username);
-  // Assign next available color
-  const idx = (nextColorIndex % 9) + 1; // 1-9 for others
-  nextColorIndex++;
+  
+  // Assign new color: cycle through 1-9
+  const idx = nextColorIndex;
+  nextColorIndex = (nextColorIndex % 9) + 1;
   userColorMap.set(username, idx);
+  console.log(`Assigned color ${idx} to user: ${username}`);
   return idx;
 }
 function esc(s) {
