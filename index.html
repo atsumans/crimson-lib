@@ -1852,7 +1852,7 @@ async function renderChapter(index) {
   const bc = document.getElementById('book-content');
   bc.innerHTML = '';
   const body = doc.querySelector('body') || doc.documentElement;
-  doc.querySelectorAll('style').forEach(s => { const ns = document.createElement('style'); ns.textContent = scopeCSS(s.textContent); bc.appendChild(ns); });
+  doc.querySelectorAll('style').forEach(s => { const ns = document.createElement('style'); ns.textContent = s.textContent; bc.appendChild(ns); });
   Array.from(body.childNodes).forEach(n => bc.appendChild(document.importNode(n, true)));
 
   // Re-apply saved highlights — small delay lets the DOM fully render first
