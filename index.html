@@ -752,23 +752,8 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
 .chapter-nav-btn:hover { border-color: var(--blood-bright); color: var(--blood-bright); }
 .chapter-nav-btn:disabled { opacity: .25; cursor: not-allowed; }
 
-/* ── READING FONTS ── */
-#book-content.font-georgia  * { font-family: Georgia, 'Times New Roman', serif !important; }
-#book-content.font-palatino * { font-family: Palatino, 'Palatino Linotype', serif !important; }
-#book-content.font-garamond * { font-family: 'EB Garamond', Garamond, serif !important; }
-#book-content.font-lora     * { font-family: 'Lora', Georgia, serif !important; }
-#book-content.font-crimson  * { font-family: 'Crimson Text', Georgia, serif !important; }
-#book-content.font-opensans * { font-family: 'Open Sans', Arial, sans-serif !important; }
-#book-content.font-mono     * { font-family: 'Courier New', Courier, monospace !important; }
-#book-content[class*="font-"] em,
-#book-content[class*="font-"] i  { font-style: italic !important; }
-#book-content[class*="font-"] strong,
-#book-content[class*="font-"] b  { font-weight: bold !important; }
-
-/* ── HIGHLIGHTS — !important beats any EPUB stylesheet ── */
+/* ── HIGHLIGHTS — base style, color overridden by ucolor classes ── */
 .epub-highlight {
-  background: rgba(160,0,0,0.38) !important;
-  border-bottom: 2.5px solid #cc1111 !important;
   border-radius: 2px !important;
   cursor: pointer !important;
   display: inline !important;
@@ -776,23 +761,27 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
   text-decoration: none !important;
   transition: background .2s !important;
 }
+.epub-highlight:hover { opacity: 0.8 !important; }
+.epub-highlight.selected-ann {
+  outline: 2px solid rgba(220,0,0,0.7) !important;
+  box-shadow: 0 0 12px rgba(180,0,0,0.5) !important;
+}
 .epub-highlight:hover { background: rgba(160,0,0,0.55) !important; }
 .epub-highlight.selected-ann {
   background: rgba(200,0,0,0.6) !important;
   outline: 2px solid rgba(220,0,0,0.7) !important;
   box-shadow: 0 0 12px rgba(180,0,0,0.5) !important;
 }
-.epub-highlight.ucolor-0 { background: rgba(160,0,0,0.38)   !important; border-bottom-color: #cc1111 !important; }
-.epub-highlight.ucolor-1 { background: rgba(80,0,140,0.38)  !important; border-bottom-color: #7722cc !important; }
-.epub-highlight.ucolor-2 { background: rgba(0,80,160,0.38)  !important; border-bottom-color: #1188cc !important; }
-.epub-highlight.ucolor-3 { background: rgba(0,120,60,0.38)  !important; border-bottom-color: #11aa66 !important; }
-.epub-highlight.ucolor-4 { background: rgba(160,100,0,0.38) !important; border-bottom-color: #cc8800 !important; }
-.epub-highlight.ucolor-5 { background: rgba(180,0,90,0.38)  !important; border-bottom-color: #cc1177 !important; }
-.epub-highlight.ucolor-6 { background: rgba(0,140,140,0.38) !important; border-bottom-color: #00aaaa !important; }
-.epub-highlight.ucolor-7 { background: rgba(100,60,0,0.38)  !important; border-bottom-color: #aa6622 !important; }
-.epub-highlight.ucolor-8 { background: rgba(60,60,180,0.38) !important; border-bottom-color: #5566cc !important; }
-.epub-highlight.ucolor-9 { background: rgba(120,0,120,0.38) !important; border-bottom-color: #aa22aa !important; }
-
+#book-content .epub-highlight.ucolor-0, .epub-highlight.ucolor-0 { background: rgba(160,0,0,0.38)   !important; border-bottom: 2.5px solid #cc1111 !important; }
+#book-content .epub-highlight.ucolor-1, .epub-highlight.ucolor-1 { background: rgba(80,0,140,0.38)  !important; border-bottom: 2.5px solid #7722cc !important; }
+#book-content .epub-highlight.ucolor-2, .epub-highlight.ucolor-2 { background: rgba(0,80,160,0.38)  !important; border-bottom: 2.5px solid #1188cc !important; }
+#book-content .epub-highlight.ucolor-3, .epub-highlight.ucolor-3 { background: rgba(0,120,60,0.38)  !important; border-bottom: 2.5px solid #11aa66 !important; }
+#book-content .epub-highlight.ucolor-4, .epub-highlight.ucolor-4 { background: rgba(160,100,0,0.38) !important; border-bottom: 2.5px solid #cc8800 !important; }
+#book-content .epub-highlight.ucolor-5, .epub-highlight.ucolor-5 { background: rgba(180,0,90,0.38)  !important; border-bottom: 2.5px solid #cc1177 !important; }
+#book-content .epub-highlight.ucolor-6, .epub-highlight.ucolor-6 { background: rgba(0,140,140,0.38) !important; border-bottom: 2.5px solid #00aaaa !important; }
+#book-content .epub-highlight.ucolor-7, .epub-highlight.ucolor-7 { background: rgba(100,60,0,0.38)  !important; border-bottom: 2.5px solid #aa6622 !important; }
+#book-content .epub-highlight.ucolor-8, .epub-highlight.ucolor-8 { background: rgba(60,60,180,0.38) !important; border-bottom: 2.5px solid #5566cc !important; }
+#book-content .epub-highlight.ucolor-9, .epub-highlight.ucolor-9 { background: rgba(120,0,120,0.38) !important; border-bottom: 2.5px solid #aa22aa !important; }
 /* Same colors for annotation cards */
 .ann-card.ucolor-0 { border-left-color: #cc1111; }
 .ann-card.ucolor-1 { border-left-color: #7722cc; }
@@ -1121,7 +1110,7 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
     <!-- Settings dropdown -->
     <div style="position:relative">
       <button class="upload-epub-btn" id="settings-btn">⚙ Theme ▾</button>
-      <div id="settings-dropdown" style="display:none;position:absolute;top:38px;right:0;width:220px;background:var(--shadow);border:1px solid rgba(139,0,0,0.4);border-radius:4px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.6);padding:14px;max-height:80vh;overflow-y:auto">
+      <div id="settings-dropdown" style="display:none;position:absolute;top:38px;right:0;width:200px;background:var(--shadow);border:1px solid rgba(139,0,0,0.4);border-radius:4px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.6);padding:14px">
         <div style="font-family:var(--font-title);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Background</div>
         <div style="display:flex;flex-direction:column;gap:8px" id="theme-options">
           <button class="theme-opt active" data-theme="dark">🌑 Void Dark</button>
@@ -1135,25 +1124,6 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
           <button class="theme-opt" data-theme="pale-fang">🦇 Pale Fang</button>
           <button class="theme-opt" data-theme="gothic-botanical">🌿 Gothic Botanical</button>
           <button class="theme-opt" data-theme="vampire-cyberpunk">⚡ Vampire Cyberpunk</button>
-        </div>
-
-        <div style="font-family:var(--font-title);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:16px 0 10px;border-top:1px solid rgba(139,0,0,0.15);padding-top:14px">Reading Font</div>
-        <div style="display:flex;flex-direction:column;gap:6px" id="font-options">
-          <button class="theme-opt font-opt active" data-font="original">📖 Original (EPUB)</button>
-          <button class="theme-opt font-opt" data-font="georgia">Georgia</button>
-          <button class="theme-opt font-opt" data-font="palatino">Palatino</button>
-          <button class="theme-opt font-opt" data-font="garamond">EB Garamond</button>
-          <button class="theme-opt font-opt" data-font="lora">Lora</button>
-          <button class="theme-opt font-opt" data-font="crimson">Crimson Text</button>
-          <button class="theme-opt font-opt" data-font="opensans">Open Sans</button>
-          <button class="theme-opt font-opt" data-font="mono">Monospace</button>
-        </div>
-
-        <div style="font-family:var(--font-title);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:16px 0 10px;border-top:1px solid rgba(139,0,0,0.15);padding-top:14px">Font Size</div>
-        <div style="display:flex;gap:6px;align-items:center" id="font-size-controls">
-          <button class="theme-opt" id="font-size-down" style="flex:1;text-align:center;padding:5px">A−</button>
-          <span id="font-size-label" style="font-family:var(--font-title);font-size:.7rem;color:var(--gold);min-width:36px;text-align:center">100%</span>
-          <button class="theme-opt" id="font-size-up" style="flex:1;text-align:center;padding:5px">A+</button>
         </div>
       </div>
     </div>
@@ -1883,6 +1853,7 @@ async function switchToBook(bookId) {
     return;
   }
   activeBookId = bookId;
+  renderAnnotations(); // show only this book's annotations
   epubData = epubVault.get(bookId);
 
   saveChapterProgress();
@@ -2036,18 +2007,6 @@ async function renderChapter(index) {
   document.getElementById('reading-area').scrollTop = 0;
   pushReadingPosition(); // update others on which chapter you are on
   saveChapterProgress();
-
-  // Re-apply font after chapter renders (innerHTML was replaced)
-  const savedFont = sessionStorage.getItem('reading-font') || 'original';
-  const savedSize = sessionStorage.getItem('font-size');
-  const bcAfter = document.getElementById('book-content');
-  if (bcAfter) {
-    FONTS.forEach(f => bcAfter.classList.remove('font-' + f));
-    if (savedFont !== 'original') bcAfter.classList.add('font-' + savedFont);
-    if (savedSize) { bcAfter.style.fontSize = savedSize + '%'; }
-    const label = document.getElementById('font-size-label');
-    if (label && savedSize) label.textContent = savedSize + '%';
-  }
 }
 
 function resolveHref(base, rel) {
@@ -2310,7 +2269,7 @@ function renderAnnotations() {
   const list = document.getElementById('ann-list');
   const all  = LS.get('annotations') || [];
   // FILTER: Only show annotations for the currently open book
-  const anns = activeBookId ? all.filter(a => a.bookId === activeBookId) : all;
+  const anns = all.filter(a => a.bookId === activeBookId);
   
   if (anns.length === 0) {
     list.innerHTML = '<div class="ann-empty"><div class="e-icon">🕷️</div><p>Highlight text to weave your thoughts into the dark…</p></div>';
@@ -2558,51 +2517,6 @@ function applyTheme(theme) {
     b.classList.toggle('active', b.dataset.theme === theme);
   });
 }
-
-// ═══════════════════════════════════════════════════════
-// FONT SWITCHER
-// ═══════════════════════════════════════════════════════
-const FONTS = ['georgia','palatino','garamond','lora','crimson','opensans','mono'];
-let currentFontSize = parseInt(sessionStorage.getItem('font-size') || '100');
-
-function applyFont(font) {
-  const bc = document.getElementById('book-content');
-  if (bc) {
-    FONTS.forEach(f => bc.classList.remove('font-' + f));
-    if (font !== 'original') bc.classList.add('font-' + font);
-  }
-  document.querySelectorAll('.font-opt').forEach(b => {
-    b.classList.toggle('active', b.dataset.font === font);
-  });
-  sessionStorage.setItem('reading-font', font);
-}
-
-function applyFontSize(pct) {
-  currentFontSize = Math.min(150, Math.max(70, pct));
-  const bc = document.getElementById('book-content');
-  if (bc) bc.style.fontSize = currentFontSize + '%';
-  const label = document.getElementById('font-size-label');
-  if (label) label.textContent = currentFontSize + '%';
-  sessionStorage.setItem('font-size', String(currentFontSize));
-}
-
-// Restore saved preferences
-applyFont(sessionStorage.getItem('reading-font') || 'original');
-applyFontSize(currentFontSize);
-
-document.getElementById('font-options').addEventListener('click', e => {
-  const btn = e.target.closest('.font-opt');
-  if (!btn) return;
-  applyFont(btn.dataset.font);
-});
-document.getElementById('font-size-up').addEventListener('click', e => {
-  e.stopPropagation();
-  applyFontSize(currentFontSize + 10);
-});
-document.getElementById('font-size-down').addEventListener('click', e => {
-  e.stopPropagation();
-  applyFontSize(currentFontSize - 10);
-});
 // ═══════════════════════════════════════════════════════
 // USER COLOR ASSIGNMENT
 // Each unique username gets a consistent color index 0-9
