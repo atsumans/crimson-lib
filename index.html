@@ -1562,6 +1562,7 @@ function startLibraryListener() {
     LS.set('library', library);
     renderLibrary();
     renderLibraryDropdown();
+    renderLibraryPage();
   });
 
   // Listen for EPUB files shared by any user
@@ -1986,16 +1987,18 @@ async function loadEpub(file) {
   });
 
   progress(80);
-  await switchToBook(bookId);
+  await openBookInReader(bookId);
   progress(100);
   setTimeout(() => progress(0), 600);
 }
+
 // Open a book directly in the reader (from file upload or library click)
 async function openBookInReader(bookId) {
   showScreen('app');
   await switchToBook(bookId);
   renderLibraryPage(); // refresh library page in background
 }
+
 // Called automatically when another user shares an EPUB via Realtime Database
 async function loadEpubFromBase64(bookId, bookTitle, base64) {
   try {
@@ -2026,6 +2029,7 @@ async function loadEpubFromBase64(bookId, bookTitle, base64) {
       const id = el.getAttribute('idref');
       if (manifest[id]) spine.push({ id, ...manifest[id] });
     });
+
     // Try to extract cover from shared EPUB too
     let sharedCoverUrl = null;
     try {
@@ -2063,7 +2067,7 @@ async function loadEpubFromBase64(bookId, bookTitle, base64) {
     } catch(e) { /* no cover, fine */ }
 
     // Store in vault so the book is readable
-    //epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle });
+    epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle, coverDataUrl: sharedCoverUrl });
 
     // Add to library list if not already there
     const library = LS.get('library') || [];
@@ -2727,6 +2731,7 @@ document.addEventListener('click', () => {
   document.getElementById('library-dropdown').style.display = 'none';
   document.getElementById('settings-dropdown').style.display  = 'none';
 });
+
 // ═══════════════════════════════════════════════════════
 // LIBRARY PAGE
 // ═══════════════════════════════════════════════════════
@@ -2867,6 +2872,7 @@ document.getElementById('back-to-library-btn').addEventListener('click', () => {
 document.getElementById('lib-logout-btn').addEventListener('click', () => {
   document.getElementById('logout-btn').click();
 });
+
 // ═══════════════════════════════════════════════════════
 // THEME SWITCHER
 // ═══════════════════════════════════════════════════════
