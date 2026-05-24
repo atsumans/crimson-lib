@@ -1847,7 +1847,7 @@ function loginUser(userData, saveSession) {
     setTimeout(() => rtdb.ref('sessions/' + token).remove(), 7 * 24 * 60 * 60 * 1000);
   }
 
-  docudocument.getElementById('topbar-username').textContent = userData.displayName || userData.username;
+  document.getElementById('topbar-username').textContent = userData.displayName || userData.username;
   document.getElementById('lib-username').textContent = userData.displayName || userData.username;
   showScreen('library');
   startPresence(); // this calls startAnnotationListener + startLibraryListener
