@@ -752,10 +752,8 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
 .chapter-nav-btn:hover { border-color: var(--blood-bright); color: var(--blood-bright); }
 .chapter-nav-btn:disabled { opacity: .25; cursor: not-allowed; }
 
-/* ── HIGHLIGHTS — !important beats any EPUB stylesheet ── */
+/* ── HIGHLIGHTS — base style, color overridden by ucolor classes ── */
 .epub-highlight {
-  background: rgba(160,0,0,0.38);
-  border-bottom: 2.5px solid #cc1111;
   border-radius: 2px !important;
   cursor: pointer !important;
   display: inline !important;
@@ -763,23 +761,27 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
   text-decoration: none !important;
   transition: background .2s !important;
 }
+.epub-highlight:hover { opacity: 0.8 !important; }
+.epub-highlight.selected-ann {
+  outline: 2px solid rgba(220,0,0,0.7) !important;
+  box-shadow: 0 0 12px rgba(180,0,0,0.5) !important;
+}
 .epub-highlight:hover { background: rgba(160,0,0,0.55) !important; }
 .epub-highlight.selected-ann {
   background: rgba(200,0,0,0.6) !important;
   outline: 2px solid rgba(220,0,0,0.7) !important;
   box-shadow: 0 0 12px rgba(180,0,0,0.5) !important;
 }
-.epub-highlight.ucolor-0 { background: rgba(160,0,0,0.38)   !important; border-bottom-color: #cc1111 !important; }
-.epub-highlight.ucolor-1 { background: rgba(80,0,140,0.38)  !important; border-bottom-color: #7722cc !important; }
-.epub-highlight.ucolor-2 { background: rgba(0,80,160,0.38)  !important; border-bottom-color: #1188cc !important; }
-.epub-highlight.ucolor-3 { background: rgba(0,120,60,0.38)  !important; border-bottom-color: #11aa66 !important; }
-.epub-highlight.ucolor-4 { background: rgba(160,100,0,0.38) !important; border-bottom-color: #cc8800 !important; }
-.epub-highlight.ucolor-5 { background: rgba(180,0,90,0.38)  !important; border-bottom-color: #cc1177 !important; }
-.epub-highlight.ucolor-6 { background: rgba(0,140,140,0.38) !important; border-bottom-color: #00aaaa !important; }
-.epub-highlight.ucolor-7 { background: rgba(100,60,0,0.38)  !important; border-bottom-color: #aa6622 !important; }
-.epub-highlight.ucolor-8 { background: rgba(60,60,180,0.38) !important; border-bottom-color: #5566cc !important; }
-.epub-highlight.ucolor-9 { background: rgba(120,0,120,0.38) !important; border-bottom-color: #aa22aa !important; }
-
+#book-content .epub-highlight.ucolor-0, .epub-highlight.ucolor-0 { background: rgba(160,0,0,0.38)   !important; border-bottom: 2.5px solid #cc1111 !important; }
+#book-content .epub-highlight.ucolor-1, .epub-highlight.ucolor-1 { background: rgba(80,0,140,0.38)  !important; border-bottom: 2.5px solid #7722cc !important; }
+#book-content .epub-highlight.ucolor-2, .epub-highlight.ucolor-2 { background: rgba(0,80,160,0.38)  !important; border-bottom: 2.5px solid #1188cc !important; }
+#book-content .epub-highlight.ucolor-3, .epub-highlight.ucolor-3 { background: rgba(0,120,60,0.38)  !important; border-bottom: 2.5px solid #11aa66 !important; }
+#book-content .epub-highlight.ucolor-4, .epub-highlight.ucolor-4 { background: rgba(160,100,0,0.38) !important; border-bottom: 2.5px solid #cc8800 !important; }
+#book-content .epub-highlight.ucolor-5, .epub-highlight.ucolor-5 { background: rgba(180,0,90,0.38)  !important; border-bottom: 2.5px solid #cc1177 !important; }
+#book-content .epub-highlight.ucolor-6, .epub-highlight.ucolor-6 { background: rgba(0,140,140,0.38) !important; border-bottom: 2.5px solid #00aaaa !important; }
+#book-content .epub-highlight.ucolor-7, .epub-highlight.ucolor-7 { background: rgba(100,60,0,0.38)  !important; border-bottom: 2.5px solid #aa6622 !important; }
+#book-content .epub-highlight.ucolor-8, .epub-highlight.ucolor-8 { background: rgba(60,60,180,0.38) !important; border-bottom: 2.5px solid #5566cc !important; }
+#book-content .epub-highlight.ucolor-9, .epub-highlight.ucolor-9 { background: rgba(120,0,120,0.38) !important; border-bottom: 2.5px solid #aa22aa !important; }
 /* Same colors for annotation cards */
 .ann-card.ucolor-0 { border-left-color: #cc1111; }
 .ann-card.ucolor-1 { border-left-color: #7722cc; }
