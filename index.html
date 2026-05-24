@@ -1259,6 +1259,7 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
   <div id="topbar">
     <div class="topbar-brand">Sanguis Libri</div>
     <div class="topbar-sep">✦</div>
+    <button class="upload-epub-btn" id="back-to-library-btn" style="padding:5px 11px;font-size:.65rem">← Vault</button>
     <div id="book-title-display" style="font-style:italic;opacity:.5">No tome selected…</div>
 
     <!-- Library dropdown -->
@@ -1688,9 +1689,11 @@ function showScreen(id) {
   document.getElementById('screen-sitepass').classList.add('hidden');
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').style.display = 'none';
-  if (id === 'sitepass') document.getElementById('screen-sitepass').classList.remove('hidden');
-  else if (id === 'auth')  document.getElementById('screen-auth').classList.remove('hidden');
-  else if (id === 'app')   { document.getElementById('screen-app').style.display = 'flex'; }
+  document.getElementById('screen-library').classList.remove('active');
+  if      (id === 'sitepass') document.getElementById('screen-sitepass').classList.remove('hidden');
+  else if (id === 'auth')     document.getElementById('screen-auth').classList.remove('hidden');
+  else if (id === 'library')  { document.getElementById('screen-library').classList.add('active'); }
+  else if (id === 'app')      { document.getElementById('screen-app').style.display = 'flex'; }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1845,12 +1848,8 @@ function loginUser(userData, saveSession) {
   }
 
   document.getElementById('topbar-username').textContent = userData.displayName || userData.username;
-  showScreen('app');
-
-  // Do NOT fetch annotations from Firestore here —
-  // startAnnotationListener (called in startPresence) handles that via RTDB.
-  // Fetching from Firestore here overwrites RTDB data a few seconds later, wiping all annotations.
-
+  document.getElementById('lib-username').textContent = userData.displayName || userData.username;
+  showScreen('library');
   startPresence(); // this calls startAnnotationListener + startLibraryListener
 }
 
@@ -2064,7 +2063,7 @@ async function loadEpubFromBase64(bookId, bookTitle, base64) {
     } catch(e) { /* no cover, fine */ }
 
     // Store in vault so the book is readable
-    epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle });
+    //epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle });
 
     // Add to library list if not already there
     const library = LS.get('library') || [];
