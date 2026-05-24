@@ -752,8 +752,10 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
 .chapter-nav-btn:hover { border-color: var(--blood-bright); color: var(--blood-bright); }
 .chapter-nav-btn:disabled { opacity: .25; cursor: not-allowed; }
 
-/* ── HIGHLIGHTS — base style, color overridden by ucolor classes ── */
+/* ── HIGHLIGHTS — !important beats any EPUB stylesheet ── */
 .epub-highlight {
+  background: rgba(160,0,0,0.38) !important;
+  border-bottom: 2.5px solid #cc1111 !important;
   border-radius: 2px !important;
   cursor: pointer !important;
   display: inline !important;
@@ -761,27 +763,23 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
   text-decoration: none !important;
   transition: background .2s !important;
 }
-.epub-highlight:hover { opacity: 0.8 !important; }
-.epub-highlight.selected-ann {
-  outline: 2px solid rgba(220,0,0,0.7) !important;
-  box-shadow: 0 0 12px rgba(180,0,0,0.5) !important;
-}
 .epub-highlight:hover { background: rgba(160,0,0,0.55) !important; }
 .epub-highlight.selected-ann {
   background: rgba(200,0,0,0.6) !important;
   outline: 2px solid rgba(220,0,0,0.7) !important;
   box-shadow: 0 0 12px rgba(180,0,0,0.5) !important;
 }
-#book-content .epub-highlight.ucolor-0, .epub-highlight.ucolor-0 { background: rgba(160,0,0,0.38)   !important; border-bottom: 2.5px solid #cc1111 !important; }
-#book-content .epub-highlight.ucolor-1, .epub-highlight.ucolor-1 { background: rgba(80,0,140,0.38)  !important; border-bottom: 2.5px solid #7722cc !important; }
-#book-content .epub-highlight.ucolor-2, .epub-highlight.ucolor-2 { background: rgba(0,80,160,0.38)  !important; border-bottom: 2.5px solid #1188cc !important; }
-#book-content .epub-highlight.ucolor-3, .epub-highlight.ucolor-3 { background: rgba(0,120,60,0.38)  !important; border-bottom: 2.5px solid #11aa66 !important; }
-#book-content .epub-highlight.ucolor-4, .epub-highlight.ucolor-4 { background: rgba(160,100,0,0.38) !important; border-bottom: 2.5px solid #cc8800 !important; }
-#book-content .epub-highlight.ucolor-5, .epub-highlight.ucolor-5 { background: rgba(180,0,90,0.38)  !important; border-bottom: 2.5px solid #cc1177 !important; }
-#book-content .epub-highlight.ucolor-6, .epub-highlight.ucolor-6 { background: rgba(0,140,140,0.38) !important; border-bottom: 2.5px solid #00aaaa !important; }
-#book-content .epub-highlight.ucolor-7, .epub-highlight.ucolor-7 { background: rgba(100,60,0,0.38)  !important; border-bottom: 2.5px solid #aa6622 !important; }
-#book-content .epub-highlight.ucolor-8, .epub-highlight.ucolor-8 { background: rgba(60,60,180,0.38) !important; border-bottom: 2.5px solid #5566cc !important; }
-#book-content .epub-highlight.ucolor-9, .epub-highlight.ucolor-9 { background: rgba(120,0,120,0.38) !important; border-bottom: 2.5px solid #aa22aa !important; }
+.epub-highlight.ucolor-0 { background: rgba(160,0,0,0.38)   !important; border-bottom-color: #cc1111 !important; }
+.epub-highlight.ucolor-1 { background: rgba(80,0,140,0.38)  !important; border-bottom-color: #7722cc !important; }
+.epub-highlight.ucolor-2 { background: rgba(0,80,160,0.38)  !important; border-bottom-color: #1188cc !important; }
+.epub-highlight.ucolor-3 { background: rgba(0,120,60,0.38)  !important; border-bottom-color: #11aa66 !important; }
+.epub-highlight.ucolor-4 { background: rgba(160,100,0,0.38) !important; border-bottom-color: #cc8800 !important; }
+.epub-highlight.ucolor-5 { background: rgba(180,0,90,0.38)  !important; border-bottom-color: #cc1177 !important; }
+.epub-highlight.ucolor-6 { background: rgba(0,140,140,0.38) !important; border-bottom-color: #00aaaa !important; }
+.epub-highlight.ucolor-7 { background: rgba(100,60,0,0.38)  !important; border-bottom-color: #aa6622 !important; }
+.epub-highlight.ucolor-8 { background: rgba(60,60,180,0.38) !important; border-bottom-color: #5566cc !important; }
+.epub-highlight.ucolor-9 { background: rgba(120,0,120,0.38) !important; border-bottom-color: #aa22aa !important; }
+
 /* Same colors for annotation cards */
 .ann-card.ucolor-0 { border-left-color: #cc1111; }
 .ann-card.ucolor-1 { border-left-color: #7722cc; }
@@ -1019,6 +1017,154 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
 .screen-loading.fade { opacity: 0; pointer-events: none; }
 .loading-symbol { font-size: 3rem; animation: pulseGlow 1.5s ease-in-out infinite; }
 .loading-text { font-family: var(--font-title); font-size: .8rem; letter-spacing: .2em; text-transform: uppercase; color: var(--silver-dim); }
+
+/* ═══════════════ LIBRARY SCREEN ═══════════════ */
+#screen-library {
+  position: fixed; inset: 0; z-index: 10;
+  display: none; flex-direction: column;
+  background: var(--void);
+  overflow: hidden;
+}
+#screen-library.active { display: flex; }
+
+.lib-topbar {
+  background: var(--topbar-bg, #050308);
+  border-bottom: 1px solid rgba(139,0,0,0.3);
+  min-height: 56px;
+  display: flex; align-items: center; gap: 14px;
+  padding: 0 28px; flex-shrink: 0; position: relative; z-index: 50;
+}
+.lib-topbar::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blood), transparent);
+}
+.lib-vault-title {
+  font-family: var(--font-title); font-size: .7rem; letter-spacing: .22em;
+  text-transform: uppercase; color: var(--gold);
+}
+
+.lib-body {
+  flex: 1; overflow-y: auto; padding: 32px 36px;
+  background: radial-gradient(ellipse at 20% 0%, rgba(139,0,0,0.05), transparent 60%);
+}
+.lib-body::-webkit-scrollbar { width: 5px; }
+.lib-body::-webkit-scrollbar-thumb { background: var(--blood-dim); border-radius: 2px; }
+
+.lib-section-title {
+  font-family: var(--font-title); font-size: .65rem; letter-spacing: .22em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 22px; display: flex; align-items: center; gap: 14px;
+}
+.lib-section-title::after {
+  content: ''; flex: 1; height: 1px; background: rgba(139,0,0,0.2);
+}
+
+.lib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 24px; margin-bottom: 48px;
+}
+
+.lib-book-card {
+  display: flex; flex-direction: column; gap: 9px; cursor: pointer;
+}
+.lib-book-card:hover .lib-cover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(139,0,0,0.5);
+}
+
+.lib-cover {
+  aspect-ratio: 2/3; border-radius: 5px;
+  border: 1px solid rgba(139,0,0,0.28);
+  position: relative; overflow: hidden;
+  transition: all .25s;
+  box-shadow: 4px 6px 20px rgba(0,0,0,0.55);
+  background: linear-gradient(145deg, #1a0808 0%, #3a0808 50%, #1a0404 100%);
+}
+.lib-cover-img {
+  width: 100%; height: 100%; object-fit: cover;
+  position: absolute; inset: 0; display: block;
+}
+.lib-cover-ghost {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -60%);
+  font-size: 2.4rem; opacity: .15;
+}
+.lib-cover-foot {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 22px 9px 9px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.9));
+  font-family: var(--font-prose); font-size: .76rem;
+  color: #ede0c8; line-height: 1.3;
+}
+.lib-ann-badge {
+  position: absolute; top: 7px; right: 7px;
+  background: rgba(139,0,0,0.88); border: 1px solid rgba(220,50,50,0.5);
+  border-radius: 10px; padding: 2px 7px;
+  font-size: .62rem; color: #ffb0b0;
+  font-family: var(--font-title); letter-spacing: .05em;
+}
+
+.lib-book-name {
+  font-family: var(--font-prose); font-size: .9rem;
+  color: var(--parchment); line-height: 1.35;
+}
+.lib-book-meta {
+  font-family: var(--font-title); font-size: .58rem;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--silver-dim); margin-top: -3px;
+}
+.lib-book-progress {
+  height: 2px; background: rgba(139,0,0,0.18);
+  border-radius: 1px; overflow: hidden; margin-top: 1px;
+}
+.lib-book-progress-fill {
+  height: 100%; background: var(--blood); border-radius: 1px; transition: width .3s;
+}
+
+.lib-add-card { cursor: pointer; display: flex; flex-direction: column; gap: 9px; }
+.lib-add-cover {
+  aspect-ratio: 2/3; border-radius: 5px;
+  border: 1.5px dashed rgba(139,0,0,0.28);
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px; transition: all .2s;
+  color: rgba(139,0,0,0.4);
+}
+.lib-add-cover:hover { border-color: rgba(200,0,0,0.6); background: rgba(139,0,0,0.06); color: rgba(200,0,0,0.7); }
+.lib-add-plus { font-size: 1.9rem; line-height: 1; }
+.lib-add-lbl { font-family: var(--font-title); font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; }
+
+.lib-recent-list { display: flex; flex-direction: column; gap: 8px; }
+.lib-recent-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 4px;
+  border: 1px solid rgba(139,0,0,0.1);
+  background: rgba(139,0,0,0.03); cursor: pointer; transition: all .2s;
+}
+.lib-recent-row:hover { background: rgba(139,0,0,0.09); border-color: rgba(139,0,0,0.28); }
+.lib-recent-mini {
+  width: 28px; height: 42px; border-radius: 3px; flex-shrink: 0;
+  background: linear-gradient(145deg, #1a0808, #3a0808);
+  border: 1px solid rgba(139,0,0,0.2); overflow: hidden;
+}
+.lib-recent-mini img { width: 100%; height: 100%; object-fit: cover; }
+.lib-recent-info { flex: 1; min-width: 0; }
+.lib-recent-title { font-family: var(--font-prose); font-size: .88rem; color: var(--parchment); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lib-recent-quote { font-family: var(--font-prose); font-style: italic; font-size: .74rem; color: var(--silver-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+.lib-recent-user { font-family: var(--font-title); font-size: .6rem; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); flex-shrink: 0; display: flex; align-items: center; gap: 5px; }
+.lib-open-btn {
+  font-family: var(--font-title); font-size: .6rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--blood-bright); border: 1px solid rgba(139,0,0,0.35); border-radius: 3px;
+  padding: 4px 10px; background: none; cursor: pointer; flex-shrink: 0; transition: all .2s;
+}
+.lib-open-btn:hover { background: rgba(139,0,0,0.12); border-color: var(--blood-bright); }
+.lib-empty-state {
+  grid-column: 1/-1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; padding: 60px 20px; opacity: .35; text-align: center;
+}
+.lib-empty-state .e-icon { font-size: 3rem; }
+.lib-empty-state p { font-family: var(--font-prose); font-style: italic; font-size: .95rem; color: var(--silver); line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -1087,12 +1233,34 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
   </div>
 </div>
 
+<!-- ═══ SCREEN 3b: LIBRARY ═══ -->
+<div id="screen-library">
+  <div class="lib-topbar">
+    <div class="topbar-brand">Sanguis Libri</div>
+    <div class="topbar-sep">✦</div>
+    <div class="lib-vault-title">The Vault</div>
+    <div style="flex:1"></div>
+    <div class="user-badge">
+      <div class="user-dot"></div>
+      <span id="lib-username">—</span>
+    </div>
+    <button class="gothic-btn" style="width:auto;padding:8px 14px;font-size:.68rem" id="lib-logout-btn">Leave</button>
+  </div>
+  <div class="lib-body">
+    <div class="lib-section-title">Your Tomes</div>
+    <div class="lib-grid" id="lib-grid"></div>
+    <div class="lib-section-title" id="lib-recent-section" style="display:none">Recently Marked by the Coven</div>
+    <div class="lib-recent-list" id="lib-recent-list"></div>
+  </div>
+</div>
+
 <!-- ═══ SCREEN 3: MAIN APP ═══ -->
 <div id="screen-app">
   <!-- topbar -->
   <div id="topbar">
     <div class="topbar-brand">Sanguis Libri</div>
     <div class="topbar-sep">✦</div>
+    <button class="upload-epub-btn" id="back-to-library-btn" style="padding:5px 11px;font-size:.65rem">← Vault</button>
     <div id="book-title-display" style="font-style:italic;opacity:.5">No tome selected…</div>
 
     <!-- Library dropdown -->
@@ -1395,6 +1563,7 @@ function startLibraryListener() {
     LS.set('library', library);
     renderLibrary();
     renderLibraryDropdown();
+    renderLibraryPage();
   });
 
   // Listen for EPUB files shared by any user
@@ -1522,9 +1691,11 @@ function showScreen(id) {
   document.getElementById('screen-sitepass').classList.add('hidden');
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').style.display = 'none';
-  if (id === 'sitepass') document.getElementById('screen-sitepass').classList.remove('hidden');
-  else if (id === 'auth')  document.getElementById('screen-auth').classList.remove('hidden');
-  else if (id === 'app')   { document.getElementById('screen-app').style.display = 'flex'; }
+  document.getElementById('screen-library').classList.remove('active');
+  if      (id === 'sitepass') document.getElementById('screen-sitepass').classList.remove('hidden');
+  else if (id === 'auth')     document.getElementById('screen-auth').classList.remove('hidden');
+  else if (id === 'library')  { document.getElementById('screen-library').classList.add('active'); }
+  else if (id === 'app')      { document.getElementById('screen-app').style.display = 'flex'; }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1679,12 +1850,8 @@ function loginUser(userData, saveSession) {
   }
 
   document.getElementById('topbar-username').textContent = userData.displayName || userData.username;
-  showScreen('app');
-
-  // Do NOT fetch annotations from Firestore here —
-  // startAnnotationListener (called in startPresence) handles that via RTDB.
-  // Fetching from Firestore here overwrites RTDB data a few seconds later, wiping all annotations.
-
+  document.getElementById('lib-username').textContent = userData.displayName || userData.username;
+  showScreen('library');
   startPresence(); // this calls startAnnotationListener + startLibraryListener
 }
 
@@ -1776,8 +1943,36 @@ async function loadEpub(file) {
     bookId = bookMeta.id;
   }
 
-  // Store parsed data in memory vault
-  epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle });
+  // ── Extract cover image from EPUB ──
+  let coverDataUrl = null;
+  try {
+    // Method 1: OPF metadata cover-image id
+    const coverMeta = opfDoc.querySelector('meta[name="cover"]');
+    const coverId   = coverMeta?.getAttribute('content');
+    let   coverHref = coverId && manifest[coverId]?.href;
+    // Method 2: manifest item with id="cover-image" or properties="cover-image"
+    if (!coverHref) {
+      opfDoc.querySelectorAll('manifest item').forEach(el => {
+        if ((el.getAttribute('id') || '').toLowerCase().includes('cover') ||
+            (el.getAttribute('properties') || '').includes('cover-image')) {
+          const mt = el.getAttribute('media-type') || '';
+          if (mt.startsWith('image/')) coverHref = opfDir + el.getAttribute('href');
+        }
+      });
+    }
+    if (coverHref) {
+      const coverFile = zip.file(coverHref);
+      if (coverFile) {
+        const coverB64 = await coverFile.async('base64');
+        const ext  = coverHref.split('.').pop().toLowerCase();
+        const mime = {jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',gif:'image/gif',webp:'image/webp'}[ext] || 'image/jpeg';
+        coverDataUrl = `data:${mime};base64,${coverB64}`;
+      }
+    }
+  } catch(e) { console.warn('Cover extraction failed:', e); }
+
+  // Store parsed data in memory vault (including cover)
+  epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle, coverDataUrl });
 
   // Push EPUB binary to Realtime Database so other users get it automatically
   // Only upload if not already stored there
@@ -1794,9 +1989,16 @@ async function loadEpub(file) {
   });
 
   progress(80);
-  await switchToBook(bookId);
+  await openBookInReader(bookId);
   progress(100);
   setTimeout(() => progress(0), 600);
+}
+
+// Open a book directly in the reader (from file upload or library click)
+async function openBookInReader(bookId) {
+  showScreen('app');
+  await switchToBook(bookId);
+  renderLibraryPage(); // refresh library page in background
 }
 
 // Called automatically when another user shares an EPUB via Realtime Database
@@ -1830,8 +2032,44 @@ async function loadEpubFromBase64(bookId, bookTitle, base64) {
       if (manifest[id]) spine.push({ id, ...manifest[id] });
     });
 
+    // Try to extract cover from shared EPUB too
+    let sharedCoverUrl = null;
+    try {
+      const sharedOPF = await zip.file(
+        (await zip.file('META-INF/container.xml').async('string'))
+          .match(/full-path="([^"]+)"/)?.[1] || ''
+      )?.async('string');
+      if (sharedOPF) {
+        const sharedOpfDoc = new DOMParser().parseFromString(sharedOPF, 'application/xml');
+        const coverMeta2 = sharedOpfDoc.querySelector('meta[name="cover"]');
+        const coverId2   = coverMeta2?.getAttribute('content');
+        let   coverHref2 = null;
+        if (coverId2) {
+          sharedOpfDoc.querySelectorAll('manifest item').forEach(el => {
+            if (el.getAttribute('id') === coverId2) coverHref2 = opfDir + el.getAttribute('href');
+          });
+        }
+        if (!coverHref2) {
+          sharedOpfDoc.querySelectorAll('manifest item').forEach(el => {
+            if ((el.getAttribute('id')||'').toLowerCase().includes('cover') || (el.getAttribute('properties')||'').includes('cover-image')) {
+              if ((el.getAttribute('media-type')||'').startsWith('image/')) coverHref2 = opfDir + el.getAttribute('href');
+            }
+          });
+        }
+        if (coverHref2) {
+          const cf = zip.file(coverHref2);
+          if (cf) {
+            const cb = await cf.async('base64');
+            const ext2 = coverHref2.split('.').pop().toLowerCase();
+            const mime2 = {jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',gif:'image/gif',webp:'image/webp'}[ext2] || 'image/jpeg';
+            sharedCoverUrl = `data:${mime2};base64,${cb}`;
+          }
+        }
+      }
+    } catch(e) { /* no cover, fine */ }
+
     // Store in vault so the book is readable
-    epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle });
+    epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle, coverDataUrl: sharedCoverUrl });
 
     // Add to library list if not already there
     const library = LS.get('library') || [];
@@ -1853,7 +2091,6 @@ async function switchToBook(bookId) {
     return;
   }
   activeBookId = bookId;
-  renderAnnotations(); // show only this book's annotations
   epubData = epubVault.get(bookId);
 
   saveChapterProgress();
@@ -1969,6 +2206,7 @@ async function renderChapter(index) {
         #book-content strong, #book-content b { font-weight: bold !important; }
         #book-content u { text-decoration: underline !important; }
         #book-content code { font-family: monospace !important; }
+        #book-content mark { background-color: yellow !important; color: black; }
       `;
       style.textContent = scopedCSS;
       link.replaceWith(style);
@@ -2269,7 +2507,7 @@ function renderAnnotations() {
   const list = document.getElementById('ann-list');
   const all  = LS.get('annotations') || [];
   // FILTER: Only show annotations for the currently open book
-  const anns = all.filter(a => a.bookId === activeBookId);
+  const anns = activeBookId ? all.filter(a => a.bookId === activeBookId) : all;
   
   if (anns.length === 0) {
     list.innerHTML = '<div class="ann-empty"><div class="e-icon">🕷️</div><p>Highlight text to weave your thoughts into the dark…</p></div>';
@@ -2494,6 +2732,147 @@ document.getElementById('settings-btn').addEventListener('click', e => {
 document.addEventListener('click', () => {
   document.getElementById('library-dropdown').style.display = 'none';
   document.getElementById('settings-dropdown').style.display  = 'none';
+});
+
+// ═══════════════════════════════════════════════════════
+// LIBRARY PAGE
+// ═══════════════════════════════════════════════════════
+function renderLibraryPage() {
+  const grid    = document.getElementById('lib-grid');
+  if (!grid) return;
+  const library = LS.get('library') || [];
+  grid.innerHTML = '';
+
+  if (library.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'lib-empty-state';
+    empty.innerHTML = '<div class="e-icon">🩸</div><p>Your vault is empty.<br>Open a tome to begin.</p>';
+    grid.appendChild(empty);
+  } else {
+    library.forEach(book => {
+      const inMemory  = epubVault.has(book.id);
+      const vault     = epubVault.get(book.id);
+      const allAnns   = LS.get('annotations') || [];
+      const annCount  = allAnns.filter(a => a.bookId === book.id).length;
+      const spineLen  = vault?.spine?.length || 1;
+      const chProg    = book.chapterProgress || 0;
+      const pct       = inMemory ? Math.round((chProg / Math.max(spineLen - 1, 1)) * 100) : 0;
+
+      const card = document.createElement('div');
+      card.className = 'lib-book-card';
+
+      const coverImg = vault?.coverDataUrl
+        ? `<img class="lib-cover-img" src="${vault.coverDataUrl}" alt="">`
+        : `<div class="lib-cover-ghost">🦇</div>`;
+
+      card.innerHTML = `
+        <div class="lib-cover">
+          ${coverImg}
+          ${annCount > 0 ? `<div class="lib-ann-badge">${annCount} mark${annCount !== 1 ? 's' : ''}</div>` : ''}
+          <div class="lib-cover-foot">${esc(book.title)}</div>
+        </div>
+        <div class="lib-book-name">${esc(book.title)}</div>
+        <div class="lib-book-meta">Ch.${chProg + 1}${inMemory ? ' · 🩸 loaded' : ' · ⚰ upload'}</div>
+        <div class="lib-book-progress"><div class="lib-book-progress-fill" style="width:${pct}%"></div></div>`;
+
+      card.addEventListener('click', async () => {
+        if (!inMemory) { showSyncToast('Re-upload this tome to read it'); return; }
+        await openBookInReader(book.id);
+      });
+
+      // Right-click to remove
+      card.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        if (confirm(`Remove "${book.title}" from the vault?`)) {
+          removeFromLibrary(book.id);
+          renderLibraryPage();
+        }
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  // "Add new" card always at the end
+  const addCard = document.createElement('div');
+  addCard.className = 'lib-add-card';
+  addCard.innerHTML = `
+    <label class="lib-add-cover" for="file-input" style="cursor:pointer">
+      <div class="lib-add-plus">+</div>
+      <div class="lib-add-lbl">Open Tome</div>
+    </label>
+    <div class="lib-book-name" style="opacity:.35;font-size:.78rem;font-family:var(--font-prose)">Add new book</div>`;
+  grid.appendChild(addCard);
+
+  renderLibraryRecentFeed();
+}
+
+function renderLibraryRecentFeed() {
+  const allAnns    = LS.get('annotations') || [];
+  const library    = LS.get('library') || [];
+  const recentSec  = document.getElementById('lib-recent-section');
+  const recentList = document.getElementById('lib-recent-list');
+  if (!recentList) return;
+  recentList.innerHTML = '';
+
+  if (allAnns.length === 0) { recentSec.style.display = 'none'; return; }
+  recentSec.style.display = 'flex';
+
+  const sorted = [...allAnns].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 8);
+  const colors = ['#cc1111','#7722cc','#1188cc','#11aa66','#cc8800','#cc1177','#00aaaa','#aa6622','#5566cc','#aa22aa'];
+
+  sorted.forEach(ann => {
+    const book     = library.find(b => b.id === ann.bookId);
+    const vault    = epubVault.get(ann.bookId);
+    const colorIdx = getUserColorIndex(ann.username);
+    const dotColor = colors[colorIdx] || colors[0];
+
+    const row = document.createElement('div');
+    row.className = 'lib-recent-row';
+    const miniImg = vault?.coverDataUrl
+      ? `<img src="${vault.coverDataUrl}" alt="" style="width:100%;height:100%;object-fit:cover">`
+      : '';
+    row.innerHTML = `
+      <div class="lib-recent-mini">${miniImg}</div>
+      <div class="lib-recent-info">
+        <div class="lib-recent-title">${esc(ann.bookTitle || book?.title || 'Unknown')}</div>
+        <div class="lib-recent-quote">"${esc((ann.quote || '').slice(0, 80))}${(ann.quote?.length||0) > 80 ? '…' : ''}"</div>
+      </div>
+      <div class="lib-recent-user">
+        <div style="width:6px;height:6px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
+        ${esc(ann.displayName || ann.username)}
+      </div>
+      <button class="lib-open-btn" data-book="${ann.bookId}" data-ann="${ann.id}">Open</button>`;
+
+    row.querySelector('.lib-open-btn').addEventListener('click', async e => {
+      e.stopPropagation();
+      const bookId = e.target.dataset.book;
+      const annId  = e.target.dataset.ann;
+      if (!epubVault.has(bookId)) { showSyncToast('Re-upload this tome to read it'); return; }
+      await openBookInReader(bookId);
+      setTimeout(() => focusAnnotation(annId), 900);
+    });
+
+    row.addEventListener('click', async () => {
+      if (!epubVault.has(ann.bookId)) { showSyncToast('Re-upload this tome to read it'); return; }
+      await openBookInReader(ann.bookId);
+    });
+
+    recentList.appendChild(row);
+  });
+}
+
+// Also refresh library page when RTDB library changes
+const _origStartLibraryListener = startLibraryListener;
+
+// Buttons
+document.getElementById('back-to-library-btn').addEventListener('click', () => {
+  showScreen('library');
+  renderLibraryPage();
+});
+
+document.getElementById('lib-logout-btn').addEventListener('click', () => {
+  document.getElementById('logout-btn').click();
 });
 
 // ═══════════════════════════════════════════════════════
