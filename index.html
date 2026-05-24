@@ -1853,6 +1853,7 @@ async function switchToBook(bookId) {
     return;
   }
   activeBookId = bookId;
+  renderAnnotations(); // show only this book's annotations
   epubData = epubVault.get(bookId);
 
   saveChapterProgress();
@@ -2268,7 +2269,7 @@ function renderAnnotations() {
   const list = document.getElementById('ann-list');
   const all  = LS.get('annotations') || [];
   // FILTER: Only show annotations for the currently open book
-  const anns = activeBookId ? all.filter(a => a.bookId === activeBookId) : all;
+  const anns = all.filter(a => a.bookId === activeBookId);
   
   if (anns.length === 0) {
     list.innerHTML = '<div class="ann-empty"><div class="e-icon">🕷️</div><p>Highlight text to weave your thoughts into the dark…</p></div>';
