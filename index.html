@@ -751,7 +751,18 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
 }
 .chapter-nav-btn:hover { border-color: var(--blood-bright); color: var(--blood-bright); }
 .chapter-nav-btn:disabled { opacity: .25; cursor: not-allowed; }
-
+/* ── READING FONTS ── */
+#book-content.font-georgia    * { font-family: Georgia, 'Times New Roman', serif !important; }
+#book-content.font-palatino   * { font-family: Palatino, 'Palatino Linotype', serif !important; }
+#book-content.font-garamond   * { font-family: 'EB Garamond', Garamond, serif !important; }
+#book-content.font-lora       * { font-family: 'Lora', Georgia, serif !important; }
+#book-content.font-crimson    * { font-family: 'Crimson Text', Georgia, serif !important; }
+#book-content.font-opensans   * { font-family: 'Open Sans', Arial, sans-serif !important; }
+#book-content.font-mono       * { font-family: 'Courier New', Courier, monospace !important; }
+#book-content[class*="font-"] em,
+#book-content[class*="font-"] i  { font-style: italic !important; }
+#book-content[class*="font-"] strong,
+#book-content[class*="font-"] b  { font-weight: bold !important; }
 /* ── HIGHLIGHTS — base style, color overridden by ucolor classes ── */
 .epub-highlight {
   border-radius: 2px !important;
@@ -1110,7 +1121,7 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
     <!-- Settings dropdown -->
     <div style="position:relative">
       <button class="upload-epub-btn" id="settings-btn">⚙ Theme ▾</button>
-      <div id="settings-dropdown" style="display:none;position:absolute;top:38px;right:0;width:200px;background:var(--shadow);border:1px solid rgba(139,0,0,0.4);border-radius:4px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.6);padding:14px">
+      <div id="settings-dropdown" style="display:none;position:absolute;top:38px;right:0;width:220px;background:var(--shadow);border:1px solid rgba(139,0,0,0.4);border-radius:4px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.6);padding:14px;max-height:80vh;overflow-y:auto">
         <div style="font-family:var(--font-title);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Background</div>
         <div style="display:flex;flex-direction:column;gap:8px" id="theme-options">
           <button class="theme-opt active" data-theme="dark">🌑 Void Dark</button>
@@ -1124,6 +1135,27 @@ body.theme-vampire-cyberpunk .gothic-textarea { background: #111b2a; color: #ffd
           <button class="theme-opt" data-theme="pale-fang">🦇 Pale Fang</button>
           <button class="theme-opt" data-theme="gothic-botanical">🌿 Gothic Botanical</button>
           <button class="theme-opt" data-theme="vampire-cyberpunk">⚡ Vampire Cyberpunk</button>
+        </div>
+
+        <!-- Font section -->
+        <div style="font-family:var(--font-title);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:16px 0 10px;border-top:1px solid rgba(139,0,0,0.15);padding-top:14px">Reading Font</div>
+        <div style="display:flex;flex-direction:column;gap:6px" id="font-options">
+          <button class="theme-opt font-opt active" data-font="original">📖 Original (EPUB)</button>
+          <button class="theme-opt font-opt" data-font="georgia">𝐺 Georgia</button>
+          <button class="theme-opt font-opt" data-font="palatino">𝑃 Palatino</button>
+          <button class="theme-opt font-opt" data-font="garamond">𝔊 EB Garamond</button>
+          <button class="theme-opt font-opt" data-font="lora">ℒ Lora</button>
+          <button class="theme-opt font-opt" data-font="crimson">𝒞 Crimson Text</button>
+          <button class="theme-opt font-opt" data-font="opensans">A Open Sans</button>
+          <button class="theme-opt font-opt" data-font="mono">⌨ Monospace</button>
+        </div>
+
+        <!-- Font size section -->
+        <div style="font-family:var(--font-title);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:16px 0 10px;border-top:1px solid rgba(139,0,0,0.15);padding-top:14px">Font Size</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="theme-opt" id="font-size-down" style="flex:1;text-align:center;font-size:1rem;padding:4px">A−</button>
+          <span id="font-size-label" style="font-family:var(--font-title);font-size:.7rem;color:var(--gold);min-width:32px;text-align:center">100%</span>
+          <button class="theme-opt" id="font-size-up" style="flex:1;text-align:center;font-size:1rem;padding:4px">A+</button>
         </div>
       </div>
     </div>
@@ -2005,8 +2037,18 @@ async function renderChapter(index) {
   }, 120);
 
   document.getElementById('reading-area').scrollTop = 0;
-  pushReadingPosition(); // update others on which chapter you are on
+  pushReadingPosition();
   saveChapterProgress();
+
+  // Re-apply font after chapter renders (innerHTML was replaced)
+  const bc = document.getElementById('book-content');
+  if (bc) {
+    const savedFont = sessionStorage.getItem('reading-font') || 'original';
+    const savedSize = sessionStorage.getItem('font-size');
+    FONTS.forEach(f => bc.classList.remove('font-' + f));
+    if (savedFont !== 'original') bc.classList.add('font-' + savedFont);
+    if (savedSize) bc.style.fontSize = savedSize + '%';
+  }
 }
 
 function resolveHref(base, rel) {
@@ -2517,6 +2559,53 @@ function applyTheme(theme) {
     b.classList.toggle('active', b.dataset.theme === theme);
   });
 }
+// ═══════════════════════════════════════════════════════
+// FONT SWITCHER
+// ═══════════════════════════════════════════════════════
+const FONTS = ['georgia','palatino','garamond','lora','crimson','opensans','mono'];
+let currentFontSize = parseInt(sessionStorage.getItem('font-size') || '100');
+
+function applyFont(font) {
+  const bc = document.getElementById('book-content');
+  if (bc) {
+    FONTS.forEach(f => bc.classList.remove('font-' + f));
+    if (font !== 'original') bc.classList.add('font-' + font);
+  }
+  document.querySelectorAll('.font-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.font === font);
+  });
+  sessionStorage.setItem('reading-font', font);
+}
+
+function applyFontSize(pct) {
+  currentFontSize = Math.min(150, Math.max(70, pct));
+  const bc = document.getElementById('book-content');
+  if (bc) bc.style.fontSize = currentFontSize + '%';
+  const label = document.getElementById('font-size-label');
+  if (label) label.textContent = currentFontSize + '%';
+  sessionStorage.setItem('font-size', currentFontSize);
+}
+
+// Restore saved preferences on load
+applyFont(sessionStorage.getItem('reading-font') || 'original');
+applyFontSize(currentFontSize);
+
+// Font option clicks
+document.getElementById('font-options').addEventListener('click', e => {
+  const btn = e.target.closest('.font-opt');
+  if (!btn) return;
+  applyFont(btn.dataset.font);
+});
+
+// Font size buttons
+document.getElementById('font-size-up').addEventListener('click', e => {
+  e.stopPropagation();
+  applyFontSize(currentFontSize + 10);
+});
+document.getElementById('font-size-down').addEventListener('click', e => {
+  e.stopPropagation();
+  applyFontSize(currentFontSize - 10);
+});
 // ═══════════════════════════════════════════════════════
 // USER COLOR ASSIGNMENT
 // Each unique username gets a consistent color index 0-9
