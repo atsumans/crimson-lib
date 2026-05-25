@@ -286,22 +286,74 @@ html, body {
   letter-spacing: .05em;
   white-space: nowrap;
 }
+/* ── THEME GRID OPTIONS ── */
 .theme-opt {
   background: rgba(139,0,0,0.1);
   border: 1px solid rgba(139,0,0,0.25);
-  border-radius: 3px;
+  border-radius: 6px;
   color: var(--parchment);
   font-family: var(--font-title);
-  font-size: .72rem;
-  letter-spacing: .08em;
-  padding: 7px 12px;
+  font-size: .62rem;
+  letter-spacing: .06em;
+  padding: 8px 6px 6px;
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   transition: all .2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.2;
 }
 .theme-opt:hover { background: rgba(139,0,0,0.25); border-color: var(--blood); }
-.theme-opt.active { background: var(--blood-dim); border-color: var(--blood-bright); color: #fff; }
+.theme-opt.active { background: var(--blood-dim); border-color: var(--blood-bright); color: #fff; box-shadow: 0 0 8px rgba(139,0,0,0.4); }
+.theme-opt .t-swatch {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+.theme-opt.active .t-swatch { border-color: rgba(255,255,255,0.6); }
 
+/* ── FONT OPTIONS ── */
+.font-size-row {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 12px;
+}
+.font-size-btn {
+  background: rgba(139,0,0,0.1);
+  border: 1px solid rgba(139,0,0,0.25);
+  border-radius: 20px;
+  color: var(--parchment);
+  cursor: pointer;
+  transition: all .2s;
+  display: flex; align-items: center; justify-content: center;
+  padding: 4px 14px;
+}
+.font-size-btn:first-child { font-size: .85rem; }
+.font-size-btn:nth-child(2) { font-size: 1.15rem; font-weight: 600; }
+.font-size-btn:hover { background: rgba(139,0,0,0.25); border-color: var(--blood); }
+
+.font-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.font-opt {
+  background: rgba(139,0,0,0.08);
+  border: 1px solid rgba(139,0,0,0.2);
+  border-radius: 8px;
+  color: var(--parchment);
+  cursor: pointer;
+  padding: 10px 6px 8px;
+  text-align: center;
+  transition: all .2s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.font-opt:hover { background: rgba(139,0,0,0.2); border-color: var(--blood); }
+.font-opt.active { background: var(--blood-dim); border-color: var(--blood-bright); box-shadow: 0 0 8px rgba(139,0,0,0.4); }
+.font-opt .fo-preview { font-size: 1.3rem; line-height: 1; color: var(--parchment); }
+.font-opt .fo-name { font-family: var(--font-title); font-size: .58rem; letter-spacing: .06em; text-transform: uppercase; color: var(--silver); }
+.font-opt.active .fo-name { color: #fff; }
 /* ── THEMES ── */
 
 /* Dark default — keeps existing Void Dark */
@@ -907,7 +959,15 @@ body.theme-vampire-cyberpunk .sel-btn { background: #cc0040; border-color: #ff27
 }
 .chapter-nav-btn:hover { border-color: var(--blood-bright); color: var(--blood-bright); }
 .chapter-nav-btn:disabled { opacity: .25; cursor: not-allowed; }
-
+/* ── READING FONTS ── */
+#book-content.font-charter  * { font-family: Georgia, Charter, 'Bitstream Charter', serif !important; }
+#book-content.font-times    * { font-family: 'Times New Roman', Times, serif !important; }
+#book-content.font-sf       * { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif !important; }
+/* preserve italic/bold regardless of font */
+#book-content[class*="font-"] em,
+#book-content[class*="font-"] i  { font-style: italic !important; }
+#book-content[class*="font-"] strong,
+#book-content[class*="font-"] b  { font-weight: bold !important; }
 /* ── HIGHLIGHTS — base style, color overridden by ucolor classes ── */
 .epub-highlight {
   border-radius: 2px !important;
@@ -1455,20 +1515,51 @@ body.theme-vampire-cyberpunk .sel-btn { background: #cc0040; border-color: #ff27
     <!-- Settings dropdown -->
     <div style="position:relative">
       <button class="upload-epub-btn" id="settings-btn">⚙ Theme ▾</button>
-      <div id="settings-dropdown" style="display:none;position:absolute;top:38px;right:0;width:200px;background:var(--shadow);border:1px solid rgba(139,0,0,0.4);border-radius:4px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.6);padding:14px">
-        <div style="font-family:var(--font-title);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Background</div>
-        <div style="display:flex;flex-direction:column;gap:8px" id="theme-options">
-          <button class="theme-opt active" data-theme="dark">🌑 Void Dark</button>
-          <button class="theme-opt" data-theme="dim">🩸 Dim Crimson</button>
-          <button class="theme-opt" data-theme="parchment">🪶 Soft Linen</button>
-          <button class="theme-opt" data-theme="light">🌿 Forest Light</button>
-          <button class="theme-opt" data-theme="crypt-noir">🪦 Crypt Noir</button>
-          <button class="theme-opt" data-theme="dusky-plum">💜 Dusky Plum Smoke</button>
-          <button class="theme-opt" data-theme="silver-stake">🗡️ Silver Stake</button>
-          <button class="theme-opt" data-theme="raven-feather">🐦 Raven Feather</button>
-          <button class="theme-opt" data-theme="pale-fang">🦇 Pale Fang</button>
-          <button class="theme-opt" data-theme="gothic-botanical">🌿 Gothic Botanical</button>
-          <button class="theme-opt" data-theme="vampire-cyberpunk">⚡ Vampire Cyberpunk</button>
+      <div id="settings-dropdown" style="display:none;position:absolute;top:38px;right:0;width:280px;background:var(--shadow);border:1px solid rgba(139,0,0,0.4);border-radius:6px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.7);padding:14px 12px;max-height:85vh;overflow-y:auto">
+
+        <!-- Font size row -->
+        <div style="font-family:var(--font-title);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Font Size</div>
+        <div class="font-size-row">
+          <button class="font-size-btn" id="font-size-down" title="Smaller">A</button>
+          <button class="font-size-btn" id="font-size-up" title="Larger"><b>A</b></button>
+          <span id="font-size-label" style="font-family:var(--font-title);font-size:.62rem;color:var(--silver-dim);margin-left:4px">100%</span>
+        </div>
+
+        <!-- Font picker grid -->
+        <div style="font-family:var(--font-title);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;margin-top:4px">Typeface</div>
+        <div class="font-grid" id="font-options">
+          <button class="font-opt active" data-font="original">
+            <span class="fo-preview" style="font-family:'IM Fell English',serif;font-style:italic">Aa</span>
+            <span class="fo-name">Original</span>
+          </button>
+          <button class="font-opt" data-font="charter">
+            <span class="fo-preview" style="font-family:Georgia,serif">Aa</span>
+            <span class="fo-name">Charter</span>
+          </button>
+          <button class="font-opt" data-font="times">
+            <span class="fo-preview" style="font-family:'Times New Roman',Times,serif">Aa</span>
+            <span class="fo-name">Times</span>
+          </button>
+          <button class="font-opt" data-font="sf">
+            <span class="fo-preview" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">Aa</span>
+            <span class="fo-name">San Francisco</span>
+          </button>
+        </div>
+
+        <!-- Theme grid -->
+        <div style="font-family:var(--font-title);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:14px 0 8px">Theme</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px" id="theme-options">
+          <button class="theme-opt active" data-theme="dark"><div class="t-swatch" style="background:#050308"></div>Void Dark</button>
+          <button class="theme-opt" data-theme="dim"><div class="t-swatch" style="background:#1e0c0c"></div>Dim Crimson</button>
+          <button class="theme-opt" data-theme="parchment"><div class="t-swatch" style="background:#f7f0e8;border-color:rgba(0,0,0,0.15)"></div>Soft Linen</button>
+          <button class="theme-opt" data-theme="light"><div class="t-swatch" style="background:#f2f4f2;border-color:rgba(0,0,0,0.15)"></div>Forest Light</button>
+          <button class="theme-opt" data-theme="crypt-noir"><div class="t-swatch" style="background:#1C1A1F"></div>Crypt Noir</button>
+          <button class="theme-opt" data-theme="dusky-plum"><div class="t-swatch" style="background:#3B1930"></div>Dusky Plum</button>
+          <button class="theme-opt" data-theme="silver-stake"><div class="t-swatch" style="background:#2B2D33"></div>Silver Stake</button>
+          <button class="theme-opt" data-theme="raven-feather"><div class="t-swatch" style="background:#070709"></div>Raven</button>
+          <button class="theme-opt" data-theme="pale-fang"><div class="t-swatch" style="background:#FFF8F6;border-color:rgba(0,0,0,0.15)"></div>Pale Fang</button>
+          <button class="theme-opt" data-theme="gothic-botanical"><div class="t-swatch" style="background:#2A1C23"></div>Botanical</button>
+          <button class="theme-opt" data-theme="vampire-cyberpunk"><div class="t-swatch" style="background:#111b2a"></div>Cyberpunk</button>
         </div>
       </div>
     </div>
@@ -2449,6 +2540,15 @@ async function renderChapter(index) {
   document.getElementById('reading-area').scrollTop = 0;
   pushReadingPosition(); // update others on which chapter you are on
   saveChapterProgress();
+  // Re-apply font after chapter renders (innerHTML was replaced)
+  const _savedFont = sessionStorage.getItem('reading-font') || 'original';
+  const _savedSize = sessionStorage.getItem('font-size');
+  const _bc = document.getElementById('book-content');
+  if (_bc) {
+    FONTS.forEach(f => _bc.classList.remove('font-' + f));
+    if (_savedFont !== 'original') _bc.classList.add('font-' + _savedFont);
+    if (_savedSize) _bc.style.fontSize = _savedSize + '%';
+  }
 }
 
 function resolveHref(base, rel) {
@@ -3117,23 +3217,67 @@ document.addEventListener('click', e => {
 // THEME SWITCHER
 // ═══════════════════════════════════════════════════════
 const THEMES = ['dark','dim','parchment','light','crypt-noir','dusky-plum','silver-stake','raven-feather','pale-fang','gothic-botanical','vampire-cyberpunk'];
-// Restore saved theme
+const FONTS  = ['charter','times','sf'];
+let currentFontSize = parseInt(sessionStorage.getItem('font-size') || '100');
+
+// ── Restore saved preferences ──
 const savedTheme = sessionStorage.getItem('theme') || 'dark';
 applyTheme(savedTheme);
+applyFont(sessionStorage.getItem('reading-font') || 'original');
+applyFontSize(currentFontSize);
 
+// ── Theme switcher ──
 document.getElementById('theme-options').addEventListener('click', e => {
   const btn = e.target.closest('.theme-opt');
   if (!btn) return;
   applyTheme(btn.dataset.theme);
   sessionStorage.setItem('theme', btn.dataset.theme);
 });
+
 function applyTheme(theme) {
   THEMES.forEach(t => document.body.classList.remove('theme-' + t));
   if (theme !== 'dark') document.body.classList.add('theme-' + theme);
-  // Sync ALL theme buttons across both reader and library dropdowns
   document.querySelectorAll('.theme-opt').forEach(b => {
     b.classList.toggle('active', b.dataset.theme === theme);
   });
+}
+
+// ── Font switcher ──
+document.getElementById('font-options').addEventListener('click', e => {
+  const btn = e.target.closest('.font-opt');
+  if (!btn) return;
+  applyFont(btn.dataset.font);
+  sessionStorage.setItem('reading-font', btn.dataset.font);
+});
+
+function applyFont(font) {
+  const bc = document.getElementById('book-content');
+  if (bc) {
+    FONTS.forEach(f => bc.classList.remove('font-' + f));
+    if (font !== 'original') bc.classList.add('font-' + font);
+  }
+  document.querySelectorAll('.font-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.font === font);
+  });
+}
+
+// ── Font size ──
+document.getElementById('font-size-up').addEventListener('click', e => {
+  e.stopPropagation();
+  applyFontSize(currentFontSize + 10);
+});
+document.getElementById('font-size-down').addEventListener('click', e => {
+  e.stopPropagation();
+  applyFontSize(currentFontSize - 10);
+});
+
+function applyFontSize(pct) {
+  currentFontSize = Math.min(150, Math.max(70, pct));
+  const bc = document.getElementById('book-content');
+  if (bc) bc.style.fontSize = currentFontSize + '%';
+  const label = document.getElementById('font-size-label');
+  if (label) label.textContent = currentFontSize + '%';
+  sessionStorage.setItem('font-size', String(currentFontSize));
 }
 // ═══════════════════════════════════════════════════════
 // USER COLOR ASSIGNMENT
