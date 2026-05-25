@@ -1743,14 +1743,40 @@ function startLibraryListener() {
     renderLibraryPage();
   });
 
-  // Listen for EPUB files shared by any user
+  // Load ALL existing EPUBs first, silently, then listen for new ones
   rtdb.ref('epub_files').off();
+
+  // Step 1: bulk load all existing EPUBs without toasts
+  rtdb.ref('epub_files').once('value').then(async snap => {
+    const entries = [];
+    snap.forEach(child => {
+      const payload = child.val();
+      if (payload && !epubVault.has(child.key)) {
+        entries.push({ bookId: child.key, payload });
+      }
+    });
+
+    // Load all in parallel
+    await Promise.all(entries.map(({ bookId, payload }) =>
+      loadEpubFromBase64(bookId, payload.title, payload.data).catch(e =>
+        console.warn(`Failed to load EPUB ${bookId}:`, e)
+      )
+    ));
+
+    // Refresh library page once all EPUBs are loaded
+    renderLibraryPage();
+  }).catch(e => console.warn('EPUB bulk load failed:', e));
+
+  // Step 2: listen for NEW EPUBs added after login
+  const epubConnectedAt = Date.now();
   rtdb.ref('epub_files').on('child_added', async snap => {
     const bookId  = snap.key;
     const payload = snap.val();
     if (!payload) return;
-    if (epubVault.has(bookId)) return;
-    showSyncToast(`"${payload.title}" is available — loading…`);
+    if (epubVault.has(bookId)) return; // already loaded in bulk
+    // Only toast for genuinely new uploads (not pre-existing ones)
+    const isNew = payload.uploadedAt && payload.uploadedAt > epubConnectedAt - 5000;
+    if (isNew) showSyncToast(`"${payload.title}" is available — loading…`);
     await loadEpubFromBase64(bookId, payload.title, payload.data);
   });
 
@@ -2255,6 +2281,8 @@ async function loadEpubFromBase64(bookId, bookTitle, base64) {
     }
 
     renderLibrary();
+    renderLibraryDropdown();
+    renderLibraryPage(); // ← refresh library page so cover and status update
     showSyncToast(`"${bookTitle}" is now ready to read`);
   } catch(e) {
     console.error('Failed to load shared EPUB:', e);
@@ -2941,14 +2969,20 @@ function renderLibraryPage() {
         ? `<img class="lib-cover-img" src="${vault.coverDataUrl}" alt="">`
         : `<div class="lib-cover-ghost">🦇</div>`;
 
+      // Show spinner if book is in library but not yet loaded into vault
+      const statusLabel = inMemory
+        ? `Ch.${chProg + 1} · 🩸 ready`
+        : `<span style="opacity:.6;font-style:italic">loading…</span>`;
+
       card.innerHTML = `
-        <div class="lib-cover">
+        <div class="lib-cover" style="${!inMemory ? 'opacity:.7' : ''}">
           ${coverImg}
+          ${!inMemory ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;animation:pulseGlow 1.5s ease-in-out infinite">🩸</div>` : ''}
           ${annCount > 0 ? `<div class="lib-ann-badge">${annCount} mark${annCount !== 1 ? 's' : ''}</div>` : ''}
           <div class="lib-cover-foot">${esc(book.title)}</div>
         </div>
         <div class="lib-book-name">${esc(book.title)}</div>
-        <div class="lib-book-meta">Ch.${chProg + 1}${inMemory ? ' · 🩸 loaded' : ' · ⚰ upload'}</div>
+        <div class="lib-book-meta">${statusLabel}</div>
         <div class="lib-book-progress"><div class="lib-book-progress-fill" style="width:${pct}%"></div></div>`;
 
       card.addEventListener('click', async () => {
