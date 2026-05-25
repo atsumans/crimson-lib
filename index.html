@@ -789,33 +789,87 @@ body.theme-vampire-cyberpunk .sel-btn { background: #cc0040; border-color: #ff27
   min-height: 70vh;
   position: relative;
 }
+/* ── MOBILE (phones ≤600px) ── */
 @media (max-width: 600px) {
-  #book-content { padding: 24px 16px; }
+  #book-content { padding: 20px 14px; }
   #book-page { padding: 0; }
-  #reading-area { padding: 12px 8px; }
+  #reading-area { padding: 10px 6px; }
   .chapter-nav { flex-direction: column; gap: 8px; }
-  .chapter-nav-btn { width: 100%; text-align: center; }
+  .chapter-nav-btn { width: 100%; text-align: center; font-size: .68rem; padding: 10px; }
   #book-title-display { display: none; }
-  .topbar-brand { font-size: .8rem; }
-  .upload-epub-btn { font-size: .65rem; padding: 6px 10px; }
-  .gothic-btn { font-size: .65rem !important; padding: 6px 10px !important; }
-  .user-badge { font-size: .65rem; padding: 5px 8px; }
+  .topbar-brand { font-size: .78rem; }
+  .upload-epub-btn { font-size: .62rem; padding: 5px 8px; }
+  .gothic-btn { font-size: .62rem !important; padding: 5px 8px !important; }
+  .user-badge { font-size: .62rem; padding: 4px 7px; gap: 5px; }
+  .user-dot { width: 6px; height: 6px; }
+  #online-count-label { display: none; }
 
-  /* Annotations slide up from bottom on mobile */
+  /* TOC drawer on mobile */
+  #toc-panel {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 80vw !important;
+    z-index: 150;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.8);
+  }
+  #toc-panel.collapsed { width: 0 !important; }
+
+  /* Annotations slide up from bottom */
   #ann-panel {
     width: 100% !important;
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 45vh;
+    height: 48vh;
     z-index: 100;
     border-left: none;
     border-top: 1px solid rgba(139,0,0,0.4);
   }
   #ann-panel.collapsed { height: 0 !important; }
-  #toggle-ann { bottom: 8px; top: auto; right: 8px; }
+  #toggle-ann { bottom: 10px; top: auto; right: 10px; }
+  #toggle-toc { top: 10px; left: 8px; }
 
   .panel-toggle { padding: 7px 9px; font-size: .8rem; }
-  #sel-tooltip { flex-wrap: wrap; max-width: 96vw; left: 2vw !important; top: auto !important; bottom: 60px; }
+  #sel-tooltip { flex-wrap: wrap; max-width: 96vw; left: 2vw !important; top: auto !important; bottom: 64px; }
+  .ann-card { padding: 10px 11px; }
+  #book-content { min-height: 50vh; }
+  .spine-item { font-size: .85rem; padding: 12px 16px; }
+
+  /* Library page on mobile */
+  .lib-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 16px; }
+  .lib-body { padding: 20px 16px; }
+  .lib-topbar { padding: 0 16px; gap: 10px; }
+  .lib-recent-quote { display: none; }
+}
+
+/* ── TABLET (iPad ≤1024px) ── */
+@media (max-width: 1024px) and (min-width: 601px) {
+  #book-content { padding: 36px 40px; }
+  #reading-area { padding: 24px 20px; }
+  #book-title-display { max-width: 160px; font-size: .85rem; }
+  .upload-epub-btn { font-size: .68rem; padding: 6px 11px; }
+
+  /* TOC panel narrower on tablet */
+  #toc-panel { width: 180px; }
+
+  /* Ann panel narrower on tablet */
+  #ann-panel { width: 240px; }
+
+  /* Library grid — 3-4 columns on tablet */
+  .lib-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 20px; }
+  .lib-body { padding: 24px 28px; }
+
+  /* TOC drawer on iPad portrait */
+  @media (orientation: portrait) {
+    #toc-panel {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 60vw !important;
+      z-index: 150;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.7);
+    }
+    #toc-panel.collapsed { width: 0 !important; }
+    #ann-panel { width: 260px; }
+  }
 }
 #book-content::before {
   content: '';
@@ -1342,6 +1396,28 @@ body.theme-vampire-cyberpunk .sel-btn { background: #cc0040; border-color: #ff27
     <div class="topbar-sep">✦</div>
     <div class="lib-vault-title">The Vault</div>
     <div style="flex:1"></div>
+
+    <!-- Theme dropdown in library -->
+    <div style="position:relative">
+      <button class="upload-epub-btn" id="lib-theme-btn" style="font-size:.68rem;padding:6px 12px">⚙ Theme ▾</button>
+      <div id="lib-theme-dropdown" style="display:none;position:absolute;top:42px;right:0;width:220px;background:var(--shadow);border:1px solid rgba(139,0,0,0.4);border-radius:4px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.6);padding:12px;max-height:70vh;overflow-y:auto">
+        <div style="font-family:var(--font-title);font-size:.63rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Background</div>
+        <div style="display:flex;flex-direction:column;gap:6px" id="lib-theme-options">
+          <button class="theme-opt" data-theme="dark">🌑 Void Dark</button>
+          <button class="theme-opt" data-theme="dim">🩸 Dim Crimson</button>
+          <button class="theme-opt" data-theme="parchment">🪶 Soft Linen</button>
+          <button class="theme-opt" data-theme="light">🌿 Forest Light</button>
+          <button class="theme-opt" data-theme="crypt-noir">🪦 Crypt Noir</button>
+          <button class="theme-opt" data-theme="dusky-plum">💜 Dusky Plum</button>
+          <button class="theme-opt" data-theme="silver-stake">🗡️ Silver Stake</button>
+          <button class="theme-opt" data-theme="raven-feather">🐦 Raven Feather</button>
+          <button class="theme-opt" data-theme="pale-fang">🦇 Pale Fang</button>
+          <button class="theme-opt" data-theme="gothic-botanical">🌿 Gothic Botanical</button>
+          <button class="theme-opt" data-theme="vampire-cyberpunk">⚡ Vampire Cyberpunk</button>
+        </div>
+      </div>
+    </div>
+
     <div class="user-badge">
       <div class="user-dot"></div>
       <span id="lib-username">—</span>
@@ -2975,6 +3051,34 @@ document.getElementById('lib-logout-btn').addEventListener('click', () => {
   document.getElementById('logout-btn').click();
 });
 
+// Library theme dropdown
+document.getElementById('lib-theme-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  const dd = document.getElementById('lib-theme-dropdown');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+  // Sync active state with current theme
+  const current = sessionStorage.getItem('theme') || 'dark';
+  document.querySelectorAll('#lib-theme-options .theme-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.theme === current);
+  });
+});
+
+document.getElementById('lib-theme-options').addEventListener('click', e => {
+  const btn = e.target.closest('.theme-opt');
+  if (!btn) return;
+  applyTheme(btn.dataset.theme);
+  sessionStorage.setItem('theme', btn.dataset.theme);
+  document.getElementById('lib-theme-dropdown').style.display = 'none';
+});
+
+// Close library theme dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('#lib-theme-btn') && !e.target.closest('#lib-theme-dropdown')) {
+    const dd = document.getElementById('lib-theme-dropdown');
+    if (dd) dd.style.display = 'none';
+  }
+});
+
 // ═══════════════════════════════════════════════════════
 // THEME SWITCHER
 // ═══════════════════════════════════════════════════════
@@ -2992,6 +3096,7 @@ document.getElementById('theme-options').addEventListener('click', e => {
 function applyTheme(theme) {
   THEMES.forEach(t => document.body.classList.remove('theme-' + t));
   if (theme !== 'dark') document.body.classList.add('theme-' + theme);
+  // Sync ALL theme buttons across both reader and library dropdowns
   document.querySelectorAll('.theme-opt').forEach(b => {
     b.classList.toggle('active', b.dataset.theme === theme);
   });
