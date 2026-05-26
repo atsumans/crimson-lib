@@ -612,8 +612,8 @@ body.theme-vampire-cyberpunk {
   --silver: #88a8cc; --silver-dim: #5577aa;
   --glow-blood: 0 0 16px rgba(255,39,87,0.6), 0 0 32px rgba(255,39,87,0.2);
   --glow-gold: 0 0 12px rgba(255,216,240,0.4);
-  --book-bg: linear-gradient(160deg, #111b2a 0%, #040508 100%);
-  --book-text: #ffd8f0;
+  --book-bg: #ffd8f0;
+  --book-text: linear-gradient(160deg, #111b2a 0%, #040508 100%);
   --topbar-bg: #040508;
 }
 body.theme-vampire-cyberpunk #toc-panel    { background: linear-gradient(180deg, #1f3b5a, #0d1520); }
@@ -1025,6 +1025,16 @@ body.theme-vampire-cyberpunk .sel-btn { background: #cc0040; border-color: #ff27
   display: none; align-items: center; gap: 10px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.6), var(--glow-blood);
   animation: popIn .15s ease;
+  touch-action: manipulation;
+  -webkit-user-select: none; user-select: none;
+}
+.sel-btn {
+  min-height: 44px; min-width: 44px;
+  touch-action: manipulation;
+}
+.sel-dismiss {
+  min-height: 44px; min-width: 36px;
+  touch-action: manipulation;
 }
 @keyframes popIn { from { opacity:0; transform: scale(.9); } to { opacity:1; transform: none; } }
 .sel-btn {
@@ -2576,9 +2586,9 @@ document.getElementById('next-ch-btn').addEventListener('click', () => { if (epu
 const selTooltip = document.getElementById('sel-tooltip');
 let pendingRange = null, pendingText = '';
 
-document.addEventListener('mouseup', e => {
+function handleSelectionChange() {
   const sel = window.getSelection();
-  if (!sel || sel.isCollapsed) { hideTooltip(); return; }
+  if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
   const text = sel.toString().trim();
   if (text.length < 2) { hideTooltip(); return; }
   const bc = document.getElementById('book-content');
@@ -2586,10 +2596,41 @@ document.addEventListener('mouseup', e => {
   if (!bc.contains(range.commonAncestorContainer)) { hideTooltip(); return; }
   pendingRange = range.cloneRange();
   pendingText = text;
+
+  // Position tooltip — works on both mouse and touch
   const rect = range.getBoundingClientRect();
-  selTooltip.style.left = Math.max(8, rect.left + rect.width / 2 - 120) + 'px';
-  selTooltip.style.top = Math.max(8, rect.top - 56 + window.scrollY) + 'px';
+  const tooltipW = 260;
+  const left = Math.min(
+    Math.max(8, rect.left + rect.width / 2 - tooltipW / 2),
+    window.innerWidth - tooltipW - 8
+  );
+  // On mobile show tooltip below selection so keyboard doesn't hide it
+  const isMobile = window.innerWidth <= 768;
+  const top = isMobile
+    ? Math.min(rect.bottom + 10, window.innerHeight - 80)
+    : Math.max(8, rect.top - 56);
+
+  selTooltip.style.left = left + 'px';
+  selTooltip.style.top  = top + 'px';
   selTooltip.style.display = 'flex';
+}
+
+// Mouse (desktop)
+document.addEventListener('mouseup', handleSelectionChange);
+
+// Touch (mobile/iPad) — fire after touch ends and browser has updated selection
+document.addEventListener('touchend', e => {
+  // Small delay lets the browser finalise the selection after touch
+  setTimeout(handleSelectionChange, 100);
+});
+
+// selectionchange fires on iOS when user drags handles
+document.addEventListener('selectionchange', () => {
+  const sel = window.getSelection();
+  if (sel && !sel.isCollapsed && sel.toString().trim().length >= 2) {
+    clearTimeout(window._selTimer);
+    window._selTimer = setTimeout(handleSelectionChange, 300);
+  }
 });
 
 document.getElementById('sel-dismiss').addEventListener('click', () => { hideTooltip(); window.getSelection()?.removeAllRanges(); });
@@ -2925,20 +2966,34 @@ function deleteAnnotation(id) {
 document.getElementById('toggle-toc')?.addEventListener('click', () => {
   const toc = document.getElementById('toc-panel');
   toc.classList.toggle('collapsed');
-  // On mobile, show/hide a dark backdrop behind the drawer
-  if (window.innerWidth <= 600) {
-    let overlay = document.getElementById('toc-overlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'toc-overlay';
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:140;display:none';
-      overlay.addEventListener('click', () => {
-        toc.classList.add('collapsed');
-        overlay.style.display = 'none';
-      });
-      document.body.appendChild(overlay);
-    }
-    overlay.style.display = toc.classList.contains('collapsed') ? 'none' : 'block';
+  toggleTocOverlay(!toc.classList.contains('collapsed'));
+});
+
+function toggleTocOverlay(show) {
+  // Show overlay on mobile AND tablet (up to 1024px)
+  if (window.innerWidth > 1024) return;
+  let overlay = document.getElementById('toc-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'toc-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:140;display:none;-webkit-tap-highlight-color:transparent';
+    // Tap OR touch anywhere on overlay closes the drawer
+    const closeToc = () => {
+      document.getElementById('toc-panel').classList.add('collapsed');
+      overlay.style.display = 'none';
+    };
+    overlay.addEventListener('click', closeToc);
+    overlay.addEventListener('touchend', e => { e.preventDefault(); closeToc(); });
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = show ? 'block' : 'none';
+}
+
+// Also close TOC when a chapter item is tapped on mobile/tablet
+document.getElementById('spine-list').addEventListener('click', () => {
+  if (window.innerWidth <= 1024) {
+    document.getElementById('toc-panel').classList.add('collapsed');
+    toggleTocOverlay(false);
   }
 });
 document.getElementById('toggle-ann').addEventListener('click', () => {
