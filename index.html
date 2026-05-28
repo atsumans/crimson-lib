@@ -366,32 +366,38 @@ body.theme-dim {
 body.theme-parchment {
   --void: #f7f0e8; --abyss: #fffdf8; --shadow: #ede4d8;
   --dusk: #e0d4c4; --mist: #d4c8b4;
-  --blood: #c4622a; --blood-bright: #d4743a; --blood-dim: #9a4418;
-  --gold: #b05a20; --gold-dim: #8a4418;
-  --parchment: #2a1800; --parchment-dark: #3c2408; --bone: #4a3010;
-  --silver: #7a6040; --silver-dim: #9a8060;
+  --blood: #8b2a4a; --blood-bright: #a83860; --blood-dim: #6b1a38;
+  --gold: #8b2a4a; --gold-dim: #6b1a38;
+  --parchment: #1e0a14; --parchment-dark: #2e1424; --bone: #3e2030;
+  --silver: #7a5068; --silver-dim: #a07888;
   --glow-blood: none; --glow-gold: none;
   --book-bg: #fffdf8;
-  --book-text: #2a1800;
-  --topbar-bg: #2a1800;
+  --book-text: #1e0a14;
+  --topbar-bg: #1e0a14;
 }
-body.theme-parchment #toc-panel   { background: linear-gradient(180deg, #ede4d8, #f7f0e8); }
-body.theme-parchment #ann-panel   { background: linear-gradient(180deg, #ede4d8, #f7f0e8); }
+body.theme-parchment #toc-panel    { background: linear-gradient(180deg, #ede4d8, #f7f0e8); }
+body.theme-parchment #ann-panel    { background: linear-gradient(180deg, #ede4d8, #f7f0e8); }
 body.theme-parchment #reading-area { background: #f0e8dc; }
-body.theme-parchment .ann-card    { background: rgba(196,98,42,0.07); border-left-color: #c4622a; }
-body.theme-parchment .gothic-card { background: #f7f0e8; }
-body.theme-parchment .gothic-input { background: #fffdf8; color: #2a1800; border-color: rgba(196,98,42,0.3); }
-body.theme-parchment .gothic-textarea { background: #fffdf8; color: #2a1800; border-color: rgba(196,98,42,0.3); }
-body.theme-parchment .screen      { background: radial-gradient(ellipse at center, #ede4d8, #d8ccbc); }
-body.theme-parchment .panel-heading { color: #b05a20; border-bottom-color: rgba(196,98,42,0.2); }
-body.theme-parchment .spine-item  { color: #7a6040; }
-body.theme-parchment .spine-item.active { color: #2a1800; border-left-color: #c4622a; background: rgba(196,98,42,0.08); }
-body.theme-parchment .ann-time    { color: #9a8060; }
-body.theme-parchment .ann-quote-text { color: #7a6040; }
-body.theme-parchment .ann-comment-text { color: #2a1800; }
-body.theme-parchment .gothic-btn  { background: linear-gradient(135deg, #9a4418, #c4622a); border-color: #d4743a; }
-body.theme-parchment .upload-epub-btn { border-color: rgba(212,116,58,0.6); color: #f0d8c0; }
-body.theme-parchment .upload-epub-btn:hover { border-color: #d4743a; color: #ffe0c0; background: rgba(196,98,42,0.15); }
+body.theme-parchment .ann-card     { background: rgba(107,26,56,0.07); border-left-color: #8b2a4a; }
+body.theme-parchment .gothic-card  { background: #f7f0e8; }
+body.theme-parchment .gothic-input { background: #fffdf8; color: #1e0a14; border-color: rgba(107,26,56,0.3); }
+body.theme-parchment .gothic-textarea { background: #fffdf8; color: #1e0a14; border-color: rgba(107,26,56,0.3); }
+body.theme-parchment .screen       { background: radial-gradient(ellipse at center, #ede4d8, #d8c4cc); }
+body.theme-parchment .panel-heading { color: #8b2a4a; border-bottom-color: rgba(107,26,56,0.2); }
+body.theme-parchment .spine-item   { color: #7a5068; }
+body.theme-parchment .spine-item.active { color: #1e0a14; border-left-color: #8b2a4a; background: rgba(107,26,56,0.08); }
+body.theme-parchment .ann-time     { color: #a07888; }
+body.theme-parchment .ann-quote-text { color: #7a5068; }
+body.theme-parchment .ann-comment-text { color: #1e0a14; }
+body.theme-parchment .gothic-btn   { background: linear-gradient(135deg, #6b1a38, #8b2a4a); border-color: #a83860; }
+body.theme-parchment .upload-epub-btn { border-color: rgba(168,56,96,0.5); color: #f0d8e4; }
+body.theme-parchment .upload-epub-btn:hover { border-color: #a83860; color: #fde8f0; background: rgba(107,26,56,0.12); }
+body.theme-parchment .chapter-nav-btn { border-color: rgba(107,26,56,0.3); color: #7a5068; }
+body.theme-parchment .chapter-nav-btn:hover { border-color: #8b2a4a; color: #1e0a14; }
+body.theme-parchment .lib-body { background: #f7f0e8; }
+body.theme-parchment .lib-section-title { color: #8b2a4a; }
+body.theme-parchment .lib-book-name { color: #1e0a14; }
+body.theme-parchment .lib-book-meta { color: #a07888; }
 
 /* Light forest green */
 body.theme-light {
@@ -484,34 +490,43 @@ body.theme-dusky-plum .chapter-nav-btn { border-color: rgba(106,43,85,0.4); colo
 body.theme-dusky-plum .chapter-nav-btn:hover { border-color: #9a4a80; color: #E5DDE3; }
 
 /* ── Silver Stake ── */
+/* ── Silver Stake — Light ── */
 body.theme-silver-stake {
-  --void: #0F0F12; --abyss: #1e2028; --shadow: #2B2D33;
+  /* keep original dark colors, add light surface vars */
+  --void: #eef0f5; --abyss: #ffffff; --shadow: #e2e6ee;
+  --dusk: #d4d8e8; --mist: #c4c8dc;
   --blood: #7A1A2A; --blood-bright: #aa2a3a; --blood-dim: #5a0a1a;
-  --gold: #BFC5CC; --gold-dim: #9FA5AC;
-  --parchment: #BFC5CC; --parchment-dark: #9FA5AC; --bone: #7A8088;
-  --silver: #9aa0a8; --silver-dim: #6a7078;
-  --glow-blood: 0 0 14px rgba(122,26,42,0.5);
-  --book-bg: linear-gradient(160deg, #2B2D33 0%, #0F0F12 100%);
-  --book-text: #BFC5CC;
+  --gold: #7A1A2A; --gold-dim: #5a0a1a;
+  --parchment: #181c2a; --parchment-dark: #282c3a; --bone: #383c4a;
+  --silver: #505870; --silver-dim: #7880a0;
+  --glow-blood: none;
+  --book-bg: #ffffff;
+  --book-text: #181c2a;
   --topbar-bg: #0F0F12;
 }
-body.theme-silver-stake #toc-panel    { background: linear-gradient(180deg, #2B2D33, #1e2028); }
-body.theme-silver-stake #ann-panel    { background: linear-gradient(180deg, #2B2D33, #1e2028); }
-body.theme-silver-stake #reading-area { background: #1e2028; }
-body.theme-silver-stake .ann-card     { background: rgba(122,26,42,0.18); border-left-color: #aa2a3a; }
-body.theme-silver-stake .panel-heading { color: #BFC5CC; border-bottom-color: rgba(122,26,42,0.3); }
-body.theme-silver-stake .spine-item   { color: #9aa0a8; }
-body.theme-silver-stake .spine-item.active { color: #BFC5CC; border-left-color: #aa2a3a; background: rgba(122,26,42,0.15); }
-body.theme-silver-stake .gothic-card  { background: linear-gradient(160deg, #2B2D33, #1e2028); }
-body.theme-silver-stake .gothic-input { background: #0F0F12; color: #BFC5CC; border-color: rgba(122,26,42,0.4); }
-body.theme-silver-stake .gothic-textarea { background: #0F0F12; color: #BFC5CC; border-color: rgba(122,26,42,0.4); }
-body.theme-silver-stake .gothic-btn   { background: linear-gradient(135deg, #5a0a1a, #7A1A2A); border-color: #aa2a3a; }
-body.theme-silver-stake .screen       { background: radial-gradient(ellipse at center, #2B2D33, #0F0F12); }
-body.theme-silver-stake .ann-time     { color: #6a7078; }
-body.theme-silver-stake .ann-quote-text { color: #9aa0a8; }
-body.theme-silver-stake .ann-comment-text { color: #BFC5CC; }
-body.theme-silver-stake .chapter-nav-btn { border-color: rgba(122,26,42,0.4); color: #9aa0a8; }
-body.theme-silver-stake .chapter-nav-btn:hover { border-color: #aa2a3a; color: #BFC5CC; }
+body.theme-silver-stake #toc-panel    { background: linear-gradient(180deg, #e2e6ee, #eef0f5); }
+body.theme-silver-stake #ann-panel    { background: linear-gradient(180deg, #e2e6ee, #eef0f5); }
+body.theme-silver-stake #reading-area { background: #eaecf4; }
+body.theme-silver-stake .ann-card     { background: rgba(122,26,42,0.06); border-left-color: #aa2a3a; }
+body.theme-silver-stake .gothic-card  { background: #eef0f5; }
+body.theme-silver-stake .gothic-input { background: #ffffff; color: #181c2a; border-color: rgba(122,26,42,0.3); }
+body.theme-silver-stake .gothic-textarea { background: #ffffff; color: #181c2a; border-color: rgba(122,26,42,0.3); }
+body.theme-silver-stake .screen       { background: radial-gradient(ellipse at center, #e2e6ee, #c8ccd8); }
+body.theme-silver-stake .panel-heading { color: #7A1A2A; border-bottom-color: rgba(122,26,42,0.2); }
+body.theme-silver-stake .spine-item   { color: #505870; }
+body.theme-silver-stake .spine-item.active { color: #181c2a; border-left-color: #aa2a3a; background: rgba(122,26,42,0.07); }
+body.theme-silver-stake .ann-time     { color: #7880a0; }
+body.theme-silver-stake .ann-quote-text { color: #505870; }
+body.theme-silver-stake .ann-comment-text { color: #181c2a; }
+body.theme-silver-stake .gothic-btn   { background: linear-gradient(135deg, #5a0a1a, #7A1A2A); border-color: #aa2a3a; color: #eef0f5; }
+body.theme-silver-stake .upload-epub-btn { border-color: rgba(122,26,42,0.4); color: #eef0f5; }
+body.theme-silver-stake .upload-epub-btn:hover { border-color: #aa2a3a; color: #fff; background: rgba(122,26,42,0.1); }
+body.theme-silver-stake .chapter-nav-btn { border-color: rgba(122,26,42,0.3); color: #505870; }
+body.theme-silver-stake .chapter-nav-btn:hover { border-color: #aa2a3a; color: #181c2a; }
+body.theme-silver-stake .lib-body { background: #eef0f5; }
+body.theme-silver-stake .lib-section-title { color: #7A1A2A; }
+body.theme-silver-stake .lib-book-name { color: #181c2a; }
+body.theme-silver-stake .lib-book-meta { color: #7880a0; }
 
 /* ── Raven Feather ── */
 body.theme-raven-feather {
@@ -604,36 +619,46 @@ body.theme-gothic-botanical .chapter-nav-btn { border-color: rgba(47,74,59,0.4);
 body.theme-gothic-botanical .chapter-nav-btn:hover { border-color: #4a7a5a; color: #E6DAD1; }
 
 /* ── Vampire Cyberpunk ── */
+/* ── Vampire Cyberpunk — Light ── */
 body.theme-vampire-cyberpunk {
-  --void: #040508; --abyss: #0d1520; --shadow: #111b2a;
-  --blood: #ff2757; --blood-bright: #ff5577; --blood-dim: #cc0040;
-  --gold: #ffd8f0; --gold-dim: #ffb0d0;
-  --parchment: #ffd8f0; --parchment-dark: #ffb0d0; --bone: #ff88c8;
-  --silver: #88a8cc; --silver-dim: #5577aa;
-  --glow-blood: 0 0 16px rgba(255,39,87,0.6), 0 0 32px rgba(255,39,87,0.2);
-  --glow-gold: 0 0 12px rgba(255,216,240,0.4);
-  --book-bg: #ffd8f0;
-  --book-text: linear-gradient(160deg, #111b2a 0%, #040508 100%);
+  /* keep original neon colors, flip surfaces to light */
+  --void: #f0f2ff; --abyss: #ffffff; --shadow: #e4e8f8;
+  --dusk: #d4d8f0; --mist: #c4c8e8;
+  --blood: #cc0040; --blood-bright: #ff2757; --blood-dim: #990030;
+  --gold: #cc0040; --gold-dim: #990030;
+  --parchment: #080c24; --parchment-dark: #181c34; --bone: #282c44;
+  --silver: #3a50a0; --silver-dim: #6070c0;
+  --glow-blood: none;
+  --glow-gold: none;
+  --book-bg: #ffffff;
+  --book-text: #080c24;
   --topbar-bg: #040508;
 }
-body.theme-vampire-cyberpunk #toc-panel    { background: linear-gradient(180deg, #1f3b5a, #0d1520); }
-body.theme-vampire-cyberpunk #ann-panel    { background: linear-gradient(180deg, #1f3b5a, #0d1520); }
-body.theme-vampire-cyberpunk #reading-area { background: #0d1520; }
-body.theme-vampire-cyberpunk .ann-card     { background: rgba(255,39,87,0.12); border-left-color: #ff2757; }
-body.theme-vampire-cyberpunk .panel-heading { color: #ffd8f0; border-bottom-color: rgba(255,39,87,0.3); }
-body.theme-vampire-cyberpunk .spine-item   { color: #88a8cc; }
-body.theme-vampire-cyberpunk .spine-item.active { color: #ffd8f0; border-left-color: #ff2757; background: rgba(255,39,87,0.12); }
-body.theme-vampire-cyberpunk .gothic-card  { background: linear-gradient(160deg, #111b2a, #0d1520); }
-body.theme-vampire-cyberpunk .gothic-input { background: #040508; color: #ffd8f0; border-color: rgba(255,39,87,0.5); }
-body.theme-vampire-cyberpunk .gothic-textarea { background: #040508; color: #ffd8f0; border-color: rgba(255,39,87,0.5); }
-body.theme-vampire-cyberpunk .gothic-btn   { background: linear-gradient(135deg, #cc0040, #ff2757); border-color: #ff5577; }
-body.theme-vampire-cyberpunk .screen       { background: radial-gradient(ellipse at center, #111b2a, #040508); }
-body.theme-vampire-cyberpunk .ann-time     { color: #5577aa; }
-body.theme-vampire-cyberpunk .ann-quote-text { color: #88a8cc; }
-body.theme-vampire-cyberpunk .ann-comment-text { color: #ffd8f0; }
-body.theme-vampire-cyberpunk .chapter-nav-btn { border-color: rgba(255,39,87,0.4); color: #88a8cc; }
-body.theme-vampire-cyberpunk .chapter-nav-btn:hover { border-color: #ff5577; color: #ffd8f0; }
-body.theme-vampire-cyberpunk .sel-btn { background: #cc0040; border-color: #ff2757; }
+body.theme-vampire-cyberpunk #toc-panel    { background: linear-gradient(180deg, #e4e8f8, #f0f2ff); }
+body.theme-vampire-cyberpunk #ann-panel    { background: linear-gradient(180deg, #e4e8f8, #f0f2ff); }
+body.theme-vampire-cyberpunk #reading-area { background: #eceeff; }
+body.theme-vampire-cyberpunk .ann-card     { background: rgba(255,39,87,0.06); border-left-color: #ff2757; }
+body.theme-vampire-cyberpunk .gothic-card  { background: #f0f2ff; }
+body.theme-vampire-cyberpunk .gothic-input { background: #ffffff; color: #080c24; border-color: rgba(255,39,87,0.35); }
+body.theme-vampire-cyberpunk .gothic-textarea { background: #ffffff; color: #080c24; border-color: rgba(255,39,87,0.35); }
+body.theme-vampire-cyberpunk .screen       { background: radial-gradient(ellipse at center, #e4e8f8, #c8cce8); }
+body.theme-vampire-cyberpunk .panel-heading { color: #cc0040; border-bottom-color: rgba(255,39,87,0.2); }
+body.theme-vampire-cyberpunk .spine-item   { color: #3a50a0; }
+body.theme-vampire-cyberpunk .spine-item.active { color: #080c24; border-left-color: #ff2757; background: rgba(255,39,87,0.07); }
+body.theme-vampire-cyberpunk .ann-time     { color: #6070c0; }
+body.theme-vampire-cyberpunk .ann-quote-text { color: #3a50a0; }
+body.theme-vampire-cyberpunk .ann-comment-text { color: #080c24; }
+body.theme-vampire-cyberpunk .gothic-btn   { background: linear-gradient(135deg, #990030, #cc0040); border-color: #ff2757; color: #ffffff; }
+body.theme-vampire-cyberpunk .upload-epub-btn { border-color: rgba(255,39,87,0.45); color: #f0f2ff; }
+body.theme-vampire-cyberpunk .upload-epub-btn:hover { border-color: #ff2757; color: #fff; background: rgba(255,39,87,0.1); }
+body.theme-vampire-cyberpunk .chapter-nav-btn { border-color: rgba(255,39,87,0.3); color: #3a50a0; }
+body.theme-vampire-cyberpunk .chapter-nav-btn:hover { border-color: #ff2757; color: #080c24; }
+body.theme-vampire-cyberpunk .sel-btn { background: #cc0040; border-color: #ff2757; color: #fff; }
+body.theme-vampire-cyberpunk .lib-body { background: #f0f2ff; }
+body.theme-vampire-cyberpunk .lib-section-title { color: #cc0040; }
+body.theme-vampire-cyberpunk .lib-book-name { color: #080c24; }
+body.theme-vampire-cyberpunk .lib-book-meta { color: #6070c0; }
+
   /* Remove EPUB's own mark tags - keep only annotation highlights */
 #book-content mark { 
   background: transparent !important; 
