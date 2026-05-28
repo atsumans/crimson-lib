@@ -123,12 +123,6 @@ html, body {
   margin-top: 8px;
   letter-spacing: .06em;
 }
-@keyframes flicker {
-  0%,100% { opacity: 1; }
-  50% { opacity: 0.85; }
-  70% { opacity: 0.95; }
-}
-
 
 .gothic-card {
   background: linear-gradient(160deg, var(--shadow) 0%, var(--abyss) 100%);
@@ -138,7 +132,6 @@ html, body {
   width: min(460px, 94vw);
   position: relative;
   animation: emergeFromDark 1.4s ease forwards;
-  animation: flicker 3s infinite;
   box-shadow: 0 0 60px rgba(139,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 .gothic-card::before, .gothic-card::after {
