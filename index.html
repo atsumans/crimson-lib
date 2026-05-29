@@ -1614,7 +1614,7 @@ body.candle-on #candle-toggle-btn .candle-icon { filter: drop-shadow(0 0 5px rgb
   background: linear-gradient(to bottom, var(--blood), var(--blood-bright), #660000);
   border-radius: 0 0 50% 50%;
   transform-origin: top center;
-  animation: dripFall ease-in forwards;
+  animation: dripFall var(--drip-dur, 2s) ease-in forwards;
 }
 .blood-drip::after {
   content: '';
@@ -3704,32 +3704,36 @@ document.getElementById('candle-toggle-btn')?.addEventListener('click', () => {
   const container = document.getElementById('drip-container');
   if (!container) return;
   function makeDrops() {
-    // Burst of 2-4 drips across the top
     const count = 2 + Math.floor(Math.random() * 3);
     for (let i = 0; i < count; i++) {
       setTimeout(() => {
         const drip = document.createElement('div');
         drip.className = 'blood-drip';
-        const h = 18 + Math.random() * 52;
-        const dur = 1.4 + Math.random() * 1.8;
-        drip.style.cssText = [
-          `left:${3 + Math.random() * 94}%`,
-          `width:${2 + Math.random() * 2.5}px`,
-          `--drip-h:${h}px`,
-          `animation-duration:${dur}s`
-        ].join(';');
+        const targetH = 20 + Math.random() * 55;
+        const dur = (1.4 + Math.random() * 1.8) * 1000;
+        const left = 3 + Math.random() * 94;
+        const width = 2 + Math.random() * 2.5;
+        drip.style.cssText = `left:${left}%;width:${width}px;height:0;opacity:1;`;
         container.appendChild(drip);
-        setTimeout(() => {
-          drip.style.transition = 'opacity 0.8s';
-          drip.style.opacity = '0';
-          setTimeout(() => drip.remove(), 900);
-        }, dur * 1000 + 400);
+        // Animate height using JS
+        const start = performance.now();
+        function step(now) {
+          const p = Math.min((now - start) / dur, 1);
+          const eased = p * p; // ease-in
+          drip.style.height = (eased * targetH) + 'px';
+          if (p < 1) requestAnimationFrame(step);
+          else {
+            // fade out
+            drip.style.transition = 'opacity 0.8s';
+            drip.style.opacity = '0';
+            setTimeout(() => drip.remove(), 900);
+          }
+        }
+        requestAnimationFrame(step);
       }, i * (200 + Math.random() * 400));
     }
-    // Schedule next burst: every 8–20 seconds
     setTimeout(makeDrops, 8000 + Math.random() * 12000);
   }
-  // Initial burst after 2.5s so page has loaded
   setTimeout(makeDrops, 2500);
 })();
 
