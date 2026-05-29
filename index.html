@@ -1604,17 +1604,16 @@ body.candle-on #candle-toggle-btn .candle-icon { filter: drop-shadow(0 0 5px rgb
 
 /* 9. DRIPPING BLOOD */
 #drip-container {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 2;
-  pointer-events: none; height: 80px; overflow: visible;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  pointer-events: none; height: 120px; overflow: visible;
 }
 .blood-drip {
   position: absolute;
   top: 0;
   width: 3px;
-  background: linear-gradient(to bottom, var(--blood), var(--blood-bright), #660000);
+  background: linear-gradient(to bottom, #8b0000, #cc0000, #660000);
   border-radius: 0 0 50% 50%;
   transform-origin: top center;
-  animation: dripFall var(--drip-dur, 2s) ease-in forwards;
 }
 .blood-drip::after {
   content: '';
@@ -1622,7 +1621,7 @@ body.candle-on #candle-toggle-btn .candle-icon { filter: drop-shadow(0 0 5px rgb
   bottom: -5px; left: 50%;
   transform: translateX(-50%);
   width: 7px; height: 7px;
-  background: var(--blood-bright);
+  background: #cc0000;
   border-radius: 50% 50% 60% 60%;
   box-shadow: 0 0 6px rgba(180,0,0,0.6);
 }
@@ -3732,9 +3731,9 @@ document.getElementById('candle-toggle-btn')?.addEventListener('click', () => {
         requestAnimationFrame(step);
       }, i * (200 + Math.random() * 400));
     }
-    setTimeout(makeDrops, 8000 + Math.random() * 12000);
+    setTimeout(makeDrops, 4000 + Math.random() * 5000);
   }
-  setTimeout(makeDrops, 2500);
+  makeDrops();
 })();
 
 // ── 10. BUTTON PRESS RIPPLE ──
