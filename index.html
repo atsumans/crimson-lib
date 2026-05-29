@@ -1593,12 +1593,13 @@ body.candle-on #candle-toggle-btn .candle-icon { filter: drop-shadow(0 0 5px rgb
   border-radius: 50%;
   background: radial-gradient(ellipse at center, rgba(180,160,220,0.07) 0%, transparent 70%);
   animation: mistCreep linear infinite;
+  opacity: 0;
 }
 @keyframes mistCreep {
-  0%   { transform: translateX(0) translateY(0) scaleX(1); opacity: 0; }
-  10%  { opacity: 1; }
-  85%  { opacity: 0.6; }
-  100% { transform: translateX(var(--mx)) translateY(-40vh) scaleX(var(--msx)); opacity: 0; }
+  0%   { transform: translate(0, 0) scaleX(1); opacity: 0; }
+  8%   { opacity: 1; }
+  88%  { opacity: 0.5; }
+  100% { transform: translate(var(--mx, 60px), -45vh) scaleX(var(--msx, 1.2)); opacity: 0; }
 }
 
 /* 9. DRIPPING BLOOD */
@@ -3689,8 +3690,7 @@ document.getElementById('candle-toggle-btn')?.addEventListener('click', () => {
       `--mx:${(Math.random() - 0.5) * 160}px`,
       `--msx:${0.8 + Math.random() * 0.6}`,
       `animation-duration:${18 + Math.random() * 22}s`,
-      `animation-delay:${Math.random() * 12}s`,
-      `opacity:0`
+      `animation-delay:${Math.random() * 12}s`
     ].join(';');
     layer.appendChild(el);
     const dur = (parseFloat(el.style.animationDuration) + parseFloat(el.style.animationDelay || 0)) * 1000;
