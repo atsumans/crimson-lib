@@ -1668,6 +1668,11 @@ body.candle-on #candle-toggle-btn .candle-icon { filter: drop-shadow(0 0 5px rgb
 <div id="atmosphere"></div>
 <div id="progress-bar"></div>
 
+<!-- Animation overlays -->
+<div id="theme-flash-overlay"></div>
+<div id="mist-layer"></div>
+<div id="drip-container"></div>
+
 <!-- ═══ SCREEN 1: SITE PASSWORD ═══ -->
 <div class="screen" id="screen-sitepass">
   <div style="display:flex;flex-direction:column;align-items:center;width:100%">
@@ -1841,6 +1846,10 @@ body.candle-on #candle-toggle-btn .candle-icon { filter: drop-shadow(0 0 5px rgb
         </div>
       </div>
     </div>
+
+    <button id="candle-toggle-btn" title="Toggle candle flicker">
+      <span class="candle-icon">🕯</span> Flicker
+    </button>
 
     <div class="user-badge" id="user-badge-btn">
       <div class="user-dot"></div>
@@ -3627,6 +3636,135 @@ function getUserColorIndex(username) {
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ═══════════════════════════════════════════════════════
+// ANIMATION SUITE JS
+// ═══════════════════════════════════════════════════════
+
+// ── 6. THEME SWITCH FLASH ──
+const origApplyTheme = applyTheme;
+window.applyTheme = function(theme) {
+  origApplyTheme(theme);
+  const overlay = document.getElementById('theme-flash-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('flash');
+  void overlay.offsetWidth; // reflow to restart animation
+  overlay.classList.add('flash');
+  overlay.addEventListener('animationend', () => overlay.classList.remove('flash'), { once: true });
+};
+// Patch lib-theme-options too
+document.getElementById('lib-theme-options')?.addEventListener('click', e => {
+  const btn = e.target.closest('.theme-opt');
+  if (!btn) return;
+  window.applyTheme(btn.dataset.theme);
+});
+
+// ── 7. CANDLE FLICKER — toggle ──
+let candleOn = sessionStorage.getItem('candle') !== 'off';
+function applyCandleState() {
+  document.body.classList.toggle('candle-on', candleOn);
+  const btn = document.getElementById('candle-toggle-btn');
+  if (btn) btn.title = candleOn ? 'Turn off candle flicker' : 'Turn on candle flicker';
+}
+applyCandleState();
+document.getElementById('candle-toggle-btn')?.addEventListener('click', () => {
+  candleOn = !candleOn;
+  sessionStorage.setItem('candle', candleOn ? 'on' : 'off');
+  applyCandleState();
+});
+
+// ── 8. MIST CREEP ──
+(function spawnMist() {
+  const layer = document.getElementById('mist-layer');
+  if (!layer) return;
+  function makeTendril() {
+    const el = document.createElement('div');
+    el.className = 'mist-tendril';
+    const w = 120 + Math.random() * 260;
+    const h = 60 + Math.random() * 100;
+    el.style.cssText = [
+      `left:${Math.random() * 110 - 5}%`,
+      `width:${w}px`,
+      `height:${h}px`,
+      `--mx:${(Math.random() - 0.5) * 160}px`,
+      `--msx:${0.8 + Math.random() * 0.6}`,
+      `animation-duration:${18 + Math.random() * 22}s`,
+      `animation-delay:${Math.random() * 12}s`,
+      `opacity:0`
+    ].join(';');
+    layer.appendChild(el);
+    const dur = (parseFloat(el.style.animationDuration) + parseFloat(el.style.animationDelay || 0)) * 1000;
+    setTimeout(() => { el.remove(); makeTendril(); }, dur + 2000);
+  }
+  for (let i = 0; i < 6; i++) makeTendril();
+})();
+
+// ── 9. DRIPPING BLOOD ──
+(function spawnDrips() {
+  const container = document.getElementById('drip-container');
+  if (!container) return;
+  function makeDrops() {
+    // Burst of 2-4 drips across the top
+    const count = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const drip = document.createElement('div');
+        drip.className = 'blood-drip';
+        const h = 18 + Math.random() * 52;
+        const dur = 1.4 + Math.random() * 1.8;
+        drip.style.cssText = [
+          `left:${3 + Math.random() * 94}%`,
+          `width:${2 + Math.random() * 2.5}px`,
+          `--drip-h:${h}px`,
+          `animation-duration:${dur}s`
+        ].join(';');
+        container.appendChild(drip);
+        setTimeout(() => {
+          drip.style.transition = 'opacity 0.8s';
+          drip.style.opacity = '0';
+          setTimeout(() => drip.remove(), 900);
+        }, dur * 1000 + 400);
+      }, i * (200 + Math.random() * 400));
+    }
+    // Schedule next burst: every 8–20 seconds
+    setTimeout(makeDrops, 8000 + Math.random() * 12000);
+  }
+  // Initial burst after 2.5s so page has loaded
+  setTimeout(makeDrops, 2500);
+})();
+
+// ── 10. BUTTON PRESS RIPPLE ──
+document.addEventListener('pointerdown', e => {
+  const btn = e.target.closest('.gothic-btn, .upload-epub-btn, .chapter-nav-btn, .sel-btn, .lib-open-btn, .gothic-input, .theme-opt, .font-opt');
+  if (!btn) return;
+  const rect = btn.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  ripple.className = 'btn-ripple';
+  const size = Math.max(rect.width, rect.height) * 1.4;
+  ripple.style.cssText = [
+    `width:${size}px`, `height:${size}px`,
+    `left:${e.clientX - rect.left - size/2}px`,
+    `top:${e.clientY - rect.top - size/2}px`
+  ].join(';');
+  btn.appendChild(ripple);
+  ripple.addEventListener('animationend', () => ripple.remove());
+});
+
+// ── 11. TOOLTIP CONJURE ──
+const _origHandleSelectionChange = handleSelectionChange;
+window.handleSelectionChange = function() {
+  _origHandleSelectionChange();
+  const tt = document.getElementById('sel-tooltip');
+  if (tt && tt.style.display === 'flex') {
+    tt.classList.remove('conjuring');
+    void tt.offsetWidth;
+    tt.classList.add('conjuring');
+    tt.addEventListener('animationend', () => tt.classList.remove('conjuring'), { once: true });
+  }
+};
+// Re-hook the events that call handleSelectionChange
+document.removeEventListener('mouseup', _origHandleSelectionChange);
+document.addEventListener('mouseup', window.handleSelectionChange);
 </script>
 </body>
 </html>
