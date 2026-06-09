@@ -2114,12 +2114,29 @@ function pushLibraryBook(bookMeta) {
 }
 
 function removeLibraryBook(bookId) {
+  // Delete the book records
   rtdb.ref('library/' + bookId).remove()
     .catch(e => console.error('RTDB library remove failed:', e));
   rtdb.ref('epub_files/' + bookId).remove()
     .catch(e => console.error('RTDB epub remove failed:', e));
   db.collection('library').doc(bookId).delete()
-    .catch(() => {}); // silent fallback
+    .catch(() => {});
+
+  // Delete all annotations belonging to this book
+  rtdb.ref('annotations').orderByChild('bookId').equalTo(bookId).once('value')
+    .then(snap => {
+      const deletions = [];
+      snap.forEach(child => {
+        deletions.push(rtdb.ref('annotations/' + child.key).remove());
+      });
+      return Promise.all(deletions);
+    })
+    .then(() => console.log(`🗑️ Annotations deleted for book ${bookId}`))
+    .catch(e => console.error('Annotation cleanup failed:', e));
+
+  // Also clear from local cache
+  const cached = LS.get('annotations') || [];
+  LS.set('annotations', cached.filter(a => a.bookId !== bookId));
 }
 
 // ── PRESENCE & CHAPTER POSITION ─────────────────────────
