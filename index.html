@@ -2416,7 +2416,10 @@ const epubVault = new Map(); // bookId → { zip, spine, manifest, opfDir, bookT
 const fileInput = document.getElementById('file-input');
 const dropZone  = document.getElementById('drop-zone');
 
-fileInput.addEventListener('change', e => { if (e.target.files[0]) loadEpub(e.target.files[0]); });
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) loadEpub(e.target.files[0]);
+  e.target.value = ''; // reset so selecting the same file again still fires 'change'
+});
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
