@@ -2070,12 +2070,15 @@ function startLibraryListener() {
       }
     });
 
-    // Load all in parallel
-    await Promise.all(entries.map(({ bookId, payload }) =>
-      loadEpubFromBase64(bookId, payload.title, payload.data).catch(e =>
+    // Load all in parallel — branch on storage location, same as child_added handler
+    await Promise.all(entries.map(({ bookId, payload }) => {
+      const loadPromise = payload.inStorage
+        ? loadEpubFromStorage(bookId, payload.title)
+        : loadEpubFromBase64(bookId, payload.title, payload.data);
+      return loadPromise.catch(e =>
         console.warn(`Failed to load EPUB ${bookId}:`, e)
-      )
-    ));
+      );
+    }));
 
     // Refresh library page once all EPUBs are loaded
     renderLibraryPage();
