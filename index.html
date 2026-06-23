@@ -1923,15 +1923,11 @@ let db, rtdb;
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
-  // Auto-detect best polling method — do NOT use experimentalForceLongPolling together with this
   db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
-  // Enable offline persistence so Firestore works even when connection is flaky
   db.enablePersistence({ synchronizeTabs: true }).catch(e => {
     console.warn('Persistence unavailable:', e.code);
   });
   rtdb = firebase.database();
-  const storage = firebase.storage();
-  const storageRef = storage.ref();
   console.log('✅ Firebase initialized');
 } catch(e) {
   console.error('❌ Firebase init error:', e.message);
@@ -2065,20 +2061,17 @@ function startLibraryListener() {
     const entries = [];
     snap.forEach(child => {
       const payload = child.val();
-      if (payload && !epubVault.has(child.key)) {
+      if (payload && payload.data && !epubVault.has(child.key)) {
         entries.push({ bookId: child.key, payload });
       }
     });
 
-    // Load all in parallel — branch on storage location, same as child_added handler
-    await Promise.all(entries.map(({ bookId, payload }) => {
-      const loadPromise = payload.inStorage
-        ? loadEpubFromStorage(bookId, payload.title)
-        : loadEpubFromBase64(bookId, payload.title, payload.data);
-      return loadPromise.catch(e =>
+    // Load all in parallel
+    await Promise.all(entries.map(({ bookId, payload }) =>
+      loadEpubFromBase64(bookId, payload.title, payload.data).catch(e =>
         console.warn(`Failed to load EPUB ${bookId}:`, e)
-      );
-    }));
+      )
+    ));
 
     // Refresh library page once all EPUBs are loaded
     renderLibraryPage();
@@ -2089,16 +2082,12 @@ function startLibraryListener() {
   rtdb.ref('epub_files').on('child_added', async snap => {
     const bookId  = snap.key;
     const payload = snap.val();
-    if (!payload) return;
+    if (!payload || !payload.data) return;
     if (epubVault.has(bookId)) return; // already loaded in bulk
     // Only toast for genuinely new uploads (not pre-existing ones)
     const isNew = payload.uploadedAt && payload.uploadedAt > epubConnectedAt - 5000;
     if (isNew) showSyncToast(`"${payload.title}" is available — loading…`);
-    if (payload.inStorage) {
-      await loadEpubFromStorage(bookId, payload.title);
-    } else if (payload.data) {
-      await loadEpubFromBase64(bookId, payload.title, payload.data);
-    }
+    await loadEpubFromBase64(bookId, payload.title, payload.data);
   });
 
   // libUnsubscribe now detaches the RTDB library listener
@@ -2515,71 +2504,23 @@ async function loadEpub(file) {
   // Store parsed data in memory vault (including cover)
   epubVault.set(bookId, { zip, spine, manifest, opfDir, bookTitle, coverDataUrl });
 
-  // Upload EPUB to Firebase Storage (persists across sessions, no size limits vs RTDB)
-  const epubRef = storageRef.child(`books/${bookId}.epub`);
-  epubRef.getMetadata().then(() => {
-    // File already exists — ask user
-    if (confirm(`"${bookTitle}" is already in the vault.\n\nOverwrite it with this file?`)) {
-      uploadEpubToStorage(epubRef, file, bookId, bookTitle);
-    }
-  }).catch(() => {
-    // Doesn't exist yet — upload fresh
-    uploadEpubToStorage(epubRef, file, bookId, bookTitle);
+  // Push the EPUB to Realtime Database as base64 so other devices can load it
+  progress(85);
+  rtdb.ref('epub_files/' + bookId).set({
+    title:      bookTitle,
+    data:       base64,
+    uploadedBy: currentUser?.username || 'unknown',
+    uploadedAt: Date.now()
+  }).then(() => {
+    console.log('✅ EPUB pushed to Realtime Database');
+  }).catch(e => {
+    console.warn('⚠️ EPUB database write failed:', e.message);
+    showSyncToast('Could not sync this book — it may be too large for cross-device sync');
   });
 
-  progress(80);
-  await openBookInReader(bookId);
   progress(100);
+  await openBookInReader(bookId);
   setTimeout(() => progress(0), 600);
-}
-function uploadEpubToStorage(epubRef, file, bookId, bookTitle) {
-  const uploadTask = epubRef.put(file, {
-    contentType: 'application/epub+zip',
-    customMetadata: {
-      title:      bookTitle,
-      uploadedBy: currentUser?.username || 'unknown',
-      uploadedAt: String(Date.now())
-    }
-  });
-  uploadTask.on('state_changed',
-    snap => {
-      const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-      progress(pct);
-      console.log(`⬆️ Uploading ${bookTitle}: ${pct}%`);
-    },
-    err => console.warn('⚠️ Storage upload failed:', err.message),
-    () => {
-      // Also store a lightweight metadata record in RTDB so other users discover it
-      rtdb.ref('epub_files/' + bookId).set({
-        title:      bookTitle,
-        uploadedBy: currentUser?.username || 'unknown',
-        uploadedAt: Date.now(),
-        inStorage:  true   // flag — fetch from Storage, not RTDB data field
-      });
-      console.log('✅ EPUB uploaded to Firebase Storage');
-      progress(100);
-      setTimeout(() => progress(0), 600);
-    }
-  );
-}
-
-async function loadEpubFromStorage(bookId, bookTitle) {
-  try {
-    const url  = await storageRef.child(`books/${bookId}.epub`).getDownloadURL();
-    const resp = await fetch(url);
-    const buf  = await resp.arrayBuffer();
-    const file = new File([buf], `${bookTitle}.epub`, { type: 'application/epub+zip' });
-    // Re-use the base64 path so vault + cover extraction all happen the same way
-    await loadEpubFromBase64(bookId, bookTitle,
-      await new Promise(res => {
-        const r = new FileReader();
-        r.onload = e => res(e.target.result.split(',')[1]);
-        r.readAsDataURL(new Blob([buf]));
-      })
-    );
-  } catch(e) {
-    console.warn('⚠️ Could not load EPUB from Storage:', e.message);
-  }
 }
 
 // Open a book directly in the reader (from file upload or library click)
